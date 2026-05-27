@@ -38,13 +38,23 @@ python run.py live   # .env 의 API 키 사용. 실거래 주의!
 config.py              # .env 로딩
 src/exchange.py        # pyupbit 래퍼 (지연 import 로 격리)
 src/strategies/        # 전략 (base + volatility_breakout)
-src/risk.py            # 손절 / 포지션 사이징 / 일일 손실 한도
+src/risk.py            # 손절 / 트레일링 스탑 / 포지션 사이징
+src/selector.py        # 멀티코인 종목 선정 (노이즈 기반)
+src/predictor.py       # 선택적 AI 매수 게이트 (Prophet)
+src/state.py           # 포지션 상태 영속화 (재시작 복구)
 src/notifier.py        # 텔레그램 / 콘솔 알림
 src/backtest.py        # 백테스팅 엔진 (수수료 반영)
-src/bot.py             # 라이브 매매 루프 (시간 기반 상태머신)
+src/bot.py             # 라이브 멀티코인 매매 루프 (시간 기반 상태머신)
 run.py                 # CLI 진입점 (backtest / live)
 tests/                 # 단위 테스트
 ```
+
+## 주요 기능
+
+- **멀티코인**: `TICKERS=KRW-BTC,KRW-ETH,KRW-SOL` 로 여러 코인 동시 매매, 예산 균등 배분
+- **트레일링 스탑**: `TRAIL_STOP_PCT` 설정 시 당일 고점 대비 하락에 청산 (최소수익 조건 포함)
+- **AI 게이트**: `USE_AI_GATE=true` 시 Prophet 예측가가 현재가 이상일 때만 매수 (prophet 설치 필요)
+- **상태 영속화**: 진입가·당일고점을 `state.json` 에 저장해 봇 재시작 시 복구
 
 ## 테스트
 

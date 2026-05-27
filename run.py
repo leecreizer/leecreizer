@@ -39,16 +39,38 @@ def cmd_backtest(args: argparse.Namespace) -> None:
 def cmd_live(args: argparse.Namespace) -> None:
     if not config.access_key or not config.secret_key:
         sys.exit("UPBIT_ACCESS_KEY / UPBIT_SECRET_KEY 를 .env 에 설정하세요.")
-    from src.bot import TradingBot
+    from src.bot import PortfolioBot
     from src.exchange import UpbitExchange
     from src.notifier import Notifier
     from src.risk import RiskManager
+    from src.state import StateStore
 
     exchange = UpbitExchange(config.access_key, config.secret_key)
     strategy = VolatilityBreakout(k=config.breakout_k, ma_window=config.ma_window)
-    risk = RiskManager(invest_ratio=config.invest_ratio, stop_loss_pct=config.stop_loss_pct)
+    risk = RiskManager(
+        invest_ratio=config.invest_ratio,
+        stop_loss_pct=config.stop_loss_pct,
+        trail_stop_pct=config.trail_stop_pct or None,
+        trail_min_profit_pct=config.trail_min_profit_pct,
+    )
     notifier = Notifier(config.telegram_token, config.telegram_chat_id)
-    TradingBot(exchange, strategy, risk, notifier, ticker=config.ticker).run()
+
+    predictor = None
+    if config.use_ai_gate:
+        from src.predictor import ProphetPredictor
+
+        predictor = ProphetPredictor()
+
+    store = StateStore(config.state_path)
+    PortfolioBot(
+        exchange,
+        strategy,
+        risk,
+        notifier,
+        config.tickers,
+        state_store=store,
+        predictor=predictor,
+    ).run()
 
 
 def main() -> None:

@@ -64,8 +64,11 @@ python-telegram-bot / requests  # 알림 (선택)
 - [x] **알림**: 텔레그램/콘솔로 거래 내역 통지
 - [x] **예외 안전성**: 네트워크/API 예외에도 루프 유지
 - [x] **백테스팅**: 실거래 전 과거검증 + 페이퍼 트레이딩
-- [ ] **재시작 안전성**: 봇 재기동 시 현재 포지션 인식 (state 영속화 — TODO)
-- [ ] **API rate limit** 대응 (업비트 초당 요청 제한)
+- [x] **재시작 안전성**: 봇 재기동 시 진입가/당일고점 복구 (`src/state.py`)
+- [x] **멀티코인**: 노이즈 기반 종목 선정 + 예산 균등 배분 (`src/selector.py`, `bot.py`)
+- [x] **트레일링 스탑**: 당일 고점 대비 하락 청산 (`src/risk.py`)
+- [x] **AI 게이트(선택)**: Prophet 예측 기반 매수 필터 (`src/predictor.py`)
+- [ ] **API rate limit** 대응 (업비트 초당 요청 제한 — 멀티코인 시 주의)
 
 ## 6. 주의사항 (리스크)
 
@@ -82,12 +85,15 @@ python-telegram-bot / requests  # 알림 (선택)
 config.py              # .env 로딩 / 설정
 src/exchange.py        # pyupbit 래퍼 (지연 import 로 격리)
 src/strategies/        # 전략 (base + volatility_breakout)
-src/risk.py            # 손절 / 포지션 사이징 / 일일 손실 한도
+src/risk.py            # 손절 / 트레일링 스탑 / 포지션 사이징
+src/selector.py        # 멀티코인 종목 선정 (노이즈 기반)
+src/predictor.py       # 선택적 AI 매수 게이트 (Prophet)
+src/state.py           # 포지션 상태 영속화 (재시작 복구)
 src/notifier.py        # 텔레그램 / 콘솔 알림
 src/backtest.py        # 백테스팅 엔진 (수수료 반영)
-src/bot.py             # 라이브 매매 루프 (상태머신)
+src/bot.py             # 라이브 멀티코인 매매 루프 (상태머신)
 run.py                 # CLI 진입점 (backtest / live)
-tests/                 # 전략·백테스트·리스크 단위 테스트
+tests/                 # 단위 테스트 (전략/백테스트/리스크/상태/선정/예측/봇)
 ```
 
 ## 참고 링크

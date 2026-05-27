@@ -3,5 +3,7 @@ pandas>=2.0
 numpy>=1.24
 python-dotenv>=1.0
 requests>=2.31
+# optional: AI 게이트(USE_AI_GATE=true) 사용 시
+# prophet>=1.1
 # dev
 pytest>=7.0
