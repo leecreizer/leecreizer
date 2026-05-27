@@ -1,0 +1,8 @@
+# Polymarket 엣지 측정 하니스 (읽기 전용)
+requests>=2.31
+pandas>=2.0
+numpy>=1.24
+matplotlib>=3.7
+# 라이브 기록(record)용 — 네트워크 허용 환경에서만 필요
+# (REST 폴링은 requests 로 충분; 아래는 선택)
+# websockets>=12.0      # 저지연 WebSocket 업그레이드 시

@@ -78,3 +78,15 @@ pytest -q
 종가 직전              → 전량 청산
 진입가 대비 -STOP_LOSS_PCT → 손절
 ```
+
+## 별도 도구: Polymarket 지연-엣지 측정 하니스 (읽기 전용)
+
+업비트 봇과 무관한 **연구용** 도구. "Binance ↔ Polymarket 지연 차익거래" 주장이
+비용 후에도 성립하는지 0원 리스크로 검증한다(주문/키 입력 없음).
+
+```bash
+python run_polymarket.py simulate --lag 3 --spread 0.02 --plot out.png   # 시연
+python run_polymarket.py analyze --csv samples.csv --plot out.png         # 분석
+```
+
+방법론과 정직한 해석은 [`docs/polymarket_edge.md`](docs/polymarket_edge.md) 참고.
