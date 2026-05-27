@@ -68,7 +68,8 @@ python-telegram-bot / requests  # 알림 (선택)
 - [x] **멀티코인**: 노이즈 기반 종목 선정 + 예산 균등 배분 (`src/selector.py`, `bot.py`)
 - [x] **트레일링 스탑**: 당일 고점 대비 하락 청산 (`src/risk.py`)
 - [x] **AI 게이트(선택)**: Prophet 예측 기반 매수 필터 (`src/predictor.py`)
-- [ ] **API rate limit** 대응 (업비트 초당 요청 제한 — 멀티코인 시 주의)
+- [x] **API rate limit** 대응: 호출 간 최소 간격 + 일봉 TTL 캐시 (`src/ratelimit.py`)
+- [x] **백테스트 확장**: 손절/트레일링 시뮬레이션 + 멀티코인 포트폴리오 집계 (`src/backtest.py`)
 
 ## 6. 주의사항 (리스크)
 

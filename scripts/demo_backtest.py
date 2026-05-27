@@ -13,7 +13,7 @@ import pandas as pd
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.backtest import run_backtest  # noqa: E402
+from src.backtest import run_backtest, run_portfolio_backtest  # noqa: E402
 from src.strategies import VolatilityBreakout  # noqa: E402
 
 
@@ -33,13 +33,33 @@ def make_ohlcv(days: int = 365, seed: int = 42) -> pd.DataFrame:
 
 def main() -> None:
     df = make_ohlcv()
+    strategy = VolatilityBreakout(k=0.5)
+
     for ma in (0, 15):
-        strategy = VolatilityBreakout(k=0.5, ma_window=ma)
-        result = run_backtest(df, strategy, fee=0.0005)
+        s = VolatilityBreakout(k=0.5, ma_window=ma)
+        result = run_backtest(df, s, fee=0.0005)
         label = "돌파" if ma == 0 else f"돌파+MA{ma}"
         print(f"== {label} (합성 데이터) ==")
         print(result.summary())
         print()
+
+    print("== 트레일링 스탑 비교 (돌파, 합성 데이터) ==")
+    plain = run_backtest(df, strategy, fee=0.0005)
+    trailed = run_backtest(
+        df, strategy, fee=0.0005, trail_stop_pct=0.05, trail_min_profit_pct=0.005
+    )
+    print(f"트레일링 미사용: {plain.summary().splitlines()[1]}")
+    print(f"트레일링 5%   : {trailed.summary().splitlines()[1]}")
+    print()
+
+    print("== 멀티코인 포트폴리오 (3코인, 합성 데이터) ==")
+    df_map = {
+        "COIN-A": make_ohlcv(seed=1),
+        "COIN-B": make_ohlcv(seed=2),
+        "COIN-C": make_ohlcv(seed=3),
+    }
+    pf = run_portfolio_backtest(df_map, strategy, fee=0.0005)
+    print(pf.summary())
 
 
 if __name__ == "__main__":

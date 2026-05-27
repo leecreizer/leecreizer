@@ -19,12 +19,19 @@ cp .env.example .env   # 업비트 API 키 등 입력
 # 업비트에서 최근 365일 일봉을 받아 검증 (네트워크 필요)
 python run.py backtest --days 365 --k 0.5 --ma 0
 
-# CSV(인덱스=날짜, open/high/low/close/volume)로 검증
-python run.py backtest --csv data/btc.csv
+# 손절/트레일링 적용
+python run.py backtest --csv data/btc.csv --stop-loss 0.05 --trail 0.05 --trail-min-profit 0.005
+
+# 멀티코인 포트폴리오 (콤마 구분 CSV 또는 --tickers)
+python run.py backtest --csv data/btc.csv,data/eth.csv
+python run.py backtest --tickers KRW-BTC,KRW-ETH --days 365
 
 # 합성 데이터로 즉시 동작 확인 (네트워크 불필요)
 python scripts/demo_backtest.py
 ```
+
+> 일부 실행 환경은 외부 네트워크(`api.upbit.com`)나 네이티브 의존성이 제한됩니다.
+> 그 경우 업비트 직접 조회 대신 `--csv` 로 백테스트하세요(데이터는 로컬에서 받아 둡니다).
 
 ## 실거래
 
@@ -36,14 +43,15 @@ python run.py live   # .env 의 API 키 사용. 실거래 주의!
 
 ```
 config.py              # .env 로딩
-src/exchange.py        # pyupbit 래퍼 (지연 import 로 격리)
+src/exchange.py        # pyupbit 래퍼 (지연 import 로 격리, rate limit + 캐시)
+src/ratelimit.py       # API 호출 속도 제한 + TTL 캐시
 src/strategies/        # 전략 (base + volatility_breakout)
 src/risk.py            # 손절 / 트레일링 스탑 / 포지션 사이징
 src/selector.py        # 멀티코인 종목 선정 (노이즈 기반)
 src/predictor.py       # 선택적 AI 매수 게이트 (Prophet)
 src/state.py           # 포지션 상태 영속화 (재시작 복구)
 src/notifier.py        # 텔레그램 / 콘솔 알림
-src/backtest.py        # 백테스팅 엔진 (수수료 반영)
+src/backtest.py        # 백테스팅 엔진 (수수료/손절/트레일링/포트폴리오)
 src/bot.py             # 라이브 멀티코인 매매 루프 (시간 기반 상태머신)
 run.py                 # CLI 진입점 (backtest / live)
 tests/                 # 단위 테스트
