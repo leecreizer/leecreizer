@@ -37,15 +37,32 @@
   <button class="btn btn-primary" data-dialog="category-dialog">+ 최상위 카테고리 추가</button>
 {% endblock %}
 {% block body %}
-<section class="panel">
-  <h2 class="panel-title">카테고리 트리 <span class="muted small">설계 페이지 노출 연동 · 계층 구조</span></h2>
-  <p class="hint">채널 칩이 <span class="chip chip-on">진하게</span> 표시되면 해당 유통 채널의 설계 페이지에 노출되고,
-  <span class="chip chip-off">흐리게</span> 표시되면 노출되지 않습니다. 수정에서 채널별 노출을 변경하세요.</p>
+<div class="duo">
+  <section class="panel duo-main">
+    <h2 class="panel-title">카테고리 트리</h2>
+    <ul class="tree tree-root">
+      {% for node in tree %}{{ render_node(node, channels) }}{% endfor %}
+    </ul>
+  </section>
 
-  <ul class="tree tree-root">
-    {% for node in tree %}{{ render_node(node, channels) }}{% endfor %}
-  </ul>
-</section>
+  <aside class="panel duo-side">
+    <h2 class="panel-title">설계 페이지 노출</h2>
+    <p class="muted small">채널 칩이 <span class="chip chip-on">진하게</span> 표시되면 해당 유통 채널의
+    설계 페이지에 노출되고, <span class="chip chip-off">흐리게</span> 표시되면 노출되지 않습니다.
+    각 카테고리의 [수정]에서 채널별 노출을 변경하세요.</p>
+    <div class="item-list">
+      {% for ch in channels %}
+      <div class="item-row">
+        <div class="item-main">
+          <span><strong>{{ ch['name'] }}</strong> <span class="mono muted">{{ ch['code'] }}</span></span>
+          <span class="muted small">API: /api/channels/{{ ch['code'] }}/categories</span>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <p class="muted small">상위 카테고리가 미노출이면 하위도 함께 노출되지 않습니다.</p>
+  </aside>
+</div>
 
 <dialog id="category-dialog">
   <form method="post" action="{{ url_for('categories.save') }}">

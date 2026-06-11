@@ -193,6 +193,32 @@ h2 { font-size: 15.5px; font-weight: 650; margin: 14px 0 8px; letter-spacing: -.
 .chev { color: var(--muted); font-size: 17px; line-height: 1; }
 .stat-row-warn .cat-count { background: var(--danger-wash); color: var(--danger); }
 
+/* ---------- 좌→우 컬럼 나열 ---------- */
+.cols { display: flex; gap: 16px; align-items: flex-start; }
+.cols .col { flex: 1; min-width: 0; }
+.cols-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+.item-list { display: flex; flex-direction: column; gap: 8px; }
+.item-row {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--card);
+  border-radius: 14px;
+  padding: 10.5px 13px;
+  box-shadow: var(--shadow-card);
+  transition: transform .14s, box-shadow .14s;
+}
+.item-row:hover { transform: translateY(-1px); box-shadow: var(--shadow-lift); }
+.item-row .item-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; font-size: 13px; }
+.item-row .item-main > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.item-actions { display: none; align-items: center; gap: 4px; }
+.item-actions form { margin: 0; display: inline; }
+.item-row:hover .item-actions { display: inline-flex; }
+.item-row:hover .badge { display: none; }
+
 /* ---------- ③ 패널(틴트) ---------- */
 .panel {
   background: var(--tint);
@@ -532,25 +558,3 @@ dialog fieldset { background: #f7f9fc; border-color: transparent; }
 ::-webkit-scrollbar-track { background: transparent; }
 
 @media (max-width: 1540px) { .layout { margin: 22px 20px; } }
-@media (max-width: 960px) {
-  .layout { flex-direction: column; margin: 10px; min-height: calc(100vh - 20px); }
-  .sidebar {
-    width: 100%; height: auto; position: static;
-    flex-direction: row; padding: 10px 14px;
-    border-radius: var(--r-win) var(--r-win) 0 0;
-    border-right: none; border-bottom: 1px solid rgba(255, 255, 255, .8);
-  }
-  .brand { margin: 0 10px 0 0; }
-  .sidebar nav { flex-direction: row; overflow-x: auto; padding: 0; }
-  .sidebar-foot { flex-direction: row; padding: 0 0 0 10px; }
-  .content { padding: 20px 16px 40px; }
-  .split { flex-direction: column; }
-  .cat-nav { width: 100%; position: static; height: auto; min-height: 0; }
-  .duo { flex-direction: column; }
-  .duo-side { width: 100%; }
-  .topbar { flex-wrap: wrap; }
-  .work-row { flex-direction: column; }
-  .detail-panel { width: 100%; position: static; max-height: none; }
-  .stat-grid { grid-template-columns: repeat(2, 1fr); }
-  .grid-2, .grid-3 { grid-template-columns: 1fr; }
-}

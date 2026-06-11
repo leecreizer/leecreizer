@@ -1,97 +1,95 @@
 {% extends "base.html" %}
 {% block title %}채널 · 그룹 · 사용자{% endblock %}
 {% block body %}
-
-<section class="panel">
-  <div class="panel-head">
-    <h2>유통 채널</h2>
-    <button class="btn btn-primary" data-dialog="channel-dialog">+ 채널 추가</button>
-  </div>
-  <table class="table">
-    <thead><tr><th>코드</th><th>이름</th><th>설명</th><th>그룹 수</th><th>상태</th><th></th></tr></thead>
-    <tbody>
+<div class="cols">
+  <section class="panel col">
+    <div class="panel-head">
+      <h2 class="panel-title">유통 채널</h2>
+      <button class="btn btn-xs" data-dialog="channel-dialog">+ 추가</button>
+    </div>
+    <div class="item-list">
     {% for ch in channels %}
-      <tr>
-        <td class="mono">{{ ch['code'] }}</td>
-        <td>{{ ch['name'] }}</td>
-        <td class="muted">{{ ch['description'] }}</td>
-        <td>{{ ch['group_count'] }}</td>
-        <td>{% if ch['active'] %}<span class="badge badge-published">사용</span>{% else %}<span class="badge badge-hidden">중지</span>{% endif %}</td>
-        <td class="actions">
-          <button class="btn btn-sm" data-dialog="channel-dialog"
+      <div class="item-row {{ 'inactive' if not ch['active'] }}">
+        <div class="item-main">
+          <span><strong>{{ ch['name'] }}</strong> <span class="mono muted">{{ ch['code'] }}</span></span>
+          <span class="muted small">{{ ch['description'] or '설명 없음' }} · 그룹 {{ ch['group_count'] }}개</span>
+        </div>
+        {% if not ch['active'] %}<span class="badge badge-hidden">중지</span>{% endif %}
+        <span class="item-actions">
+          <button class="btn btn-xs" data-dialog="channel-dialog"
                   data-id="{{ ch['id'] }}" data-code="{{ ch['code'] }}" data-name="{{ ch['name'] }}"
                   data-description="{{ ch['description'] }}" data-active="{{ ch['active'] }}">수정</button>
           <form method="post" action="{{ url_for('org.channel_delete', cid=ch['id']) }}"
                 onsubmit="return confirm('채널 [{{ ch['name'] }}]을(를) 삭제할까요?')">
-            <button class="btn btn-sm btn-danger">삭제</button>
+            <button class="btn btn-xs btn-danger">삭제</button>
           </form>
-        </td>
-      </tr>
+        </span>
+      </div>
+    {% else %}
+      <p class="muted small">채널이 없습니다.</p>
     {% endfor %}
-    </tbody>
-  </table>
-</section>
+    </div>
+  </section>
 
-<section class="panel">
-  <div class="panel-head">
-    <h2>사용자 그룹</h2>
-    <button class="btn btn-primary" data-dialog="group-dialog">+ 그룹 추가</button>
-  </div>
-  <table class="table">
-    <thead><tr><th>그룹명</th><th>소속 채널</th><th>설명</th><th>사용자 수</th><th>상태</th><th></th></tr></thead>
-    <tbody>
+  <section class="panel col">
+    <div class="panel-head">
+      <h2 class="panel-title">사용자 그룹</h2>
+      <button class="btn btn-xs" data-dialog="group-dialog">+ 추가</button>
+    </div>
+    <div class="item-list">
     {% for gr in groups %}
-      <tr>
-        <td>{{ gr['name'] }}</td>
-        <td>{{ gr['channel_name'] }}</td>
-        <td class="muted">{{ gr['description'] }}</td>
-        <td>{{ gr['user_count'] }}</td>
-        <td>{% if gr['active'] %}<span class="badge badge-published">사용</span>{% else %}<span class="badge badge-hidden">중지</span>{% endif %}</td>
-        <td class="actions">
-          <button class="btn btn-sm" data-dialog="group-dialog"
+      <div class="item-row {{ 'inactive' if not gr['active'] }}">
+        <div class="item-main">
+          <span><strong>{{ gr['name'] }}</strong></span>
+          <span class="muted small">{{ gr['channel_name'] }} · 사용자 {{ gr['user_count'] }}명</span>
+        </div>
+        {% if not gr['active'] %}<span class="badge badge-hidden">중지</span>{% endif %}
+        <span class="item-actions">
+          <button class="btn btn-xs" data-dialog="group-dialog"
                   data-id="{{ gr['id'] }}" data-name="{{ gr['name'] }}" data-channel_id="{{ gr['channel_id'] }}"
                   data-description="{{ gr['description'] }}" data-active="{{ gr['active'] }}">수정</button>
           <form method="post" action="{{ url_for('org.group_delete', gid=gr['id']) }}"
                 onsubmit="return confirm('그룹 [{{ gr['name'] }}]을(를) 삭제할까요?')">
-            <button class="btn btn-sm btn-danger">삭제</button>
+            <button class="btn btn-xs btn-danger">삭제</button>
           </form>
-        </td>
-      </tr>
+        </span>
+      </div>
+    {% else %}
+      <p class="muted small">그룹이 없습니다.</p>
     {% endfor %}
-    </tbody>
-  </table>
-</section>
+    </div>
+  </section>
 
-<section class="panel">
-  <div class="panel-head">
-    <h2>사용자</h2>
-    <button class="btn btn-primary" data-dialog="user-dialog">+ 사용자 추가</button>
-  </div>
-  <table class="table">
-    <thead><tr><th>아이디</th><th>이름</th><th>권한</th><th>채널 / 그룹</th><th>상태</th><th>생성일</th><th></th></tr></thead>
-    <tbody>
+  <section class="panel col">
+    <div class="panel-head">
+      <h2 class="panel-title">사용자</h2>
+      <button class="btn btn-xs" data-dialog="user-dialog">+ 추가</button>
+    </div>
+    <div class="item-list">
     {% for u in users %}
-      <tr>
-        <td class="mono">{{ u['username'] }}</td>
-        <td>{{ u['name'] }}</td>
-        <td>{{ {'admin':'관리자','manager':'운영자','viewer':'조회자'}.get(u['role'], u['role']) }}</td>
-        <td class="muted">{{ u['channel_name'] or '-' }} / {{ u['group_name'] or '-' }}</td>
-        <td>{% if u['active'] %}<span class="badge badge-published">사용</span>{% else %}<span class="badge badge-hidden">중지</span>{% endif %}</td>
-        <td class="muted">{{ u['created_at'][:10] }}</td>
-        <td class="actions">
-          <button class="btn btn-sm" data-dialog="user-dialog"
+      <div class="item-row {{ 'inactive' if not u['active'] }}">
+        <div class="item-main">
+          <span><strong>{{ u['name'] }}</strong> <span class="mono muted">{{ u['username'] }}</span></span>
+          <span class="muted small">{{ {'admin':'관리자','manager':'운영자','viewer':'조회자'}.get(u['role'], u['role']) }}
+            · {{ u['channel_name'] or '-' }} / {{ u['group_name'] or '-' }}</span>
+        </div>
+        {% if not u['active'] %}<span class="badge badge-hidden">중지</span>{% endif %}
+        <span class="item-actions">
+          <button class="btn btn-xs" data-dialog="user-dialog"
                   data-id="{{ u['id'] }}" data-username="{{ u['username'] }}" data-name="{{ u['name'] }}"
                   data-role="{{ u['role'] }}" data-group_id="{{ u['group_id'] or '' }}" data-active="{{ u['active'] }}">수정</button>
           <form method="post" action="{{ url_for('org.user_delete', uid=u['id']) }}"
                 onsubmit="return confirm('사용자 [{{ u['name'] }}]을(를) 삭제할까요?')">
-            <button class="btn btn-sm btn-danger">삭제</button>
+            <button class="btn btn-xs btn-danger">삭제</button>
           </form>
-        </td>
-      </tr>
+        </span>
+      </div>
+    {% else %}
+      <p class="muted small">사용자가 없습니다.</p>
     {% endfor %}
-    </tbody>
-  </table>
-</section>
+    </div>
+  </section>
+</div>
 
 <dialog id="channel-dialog">
   <form method="post" action="{{ url_for('org.channel_save') }}">
