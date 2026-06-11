@@ -49,6 +49,10 @@
     </div>
   </aside>
   <main class="content">
+    <header class="topbar">
+      <div class="crumb"><span class="muted">설계 어드민</span><strong>{{ self.title() }}</strong></div>
+      <div class="topbar-actions">{% block actions %}{% endblock %}</div>
+    </header>
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% for category, message in messages %}
         <div class="flash flash-{{ category }}">{{ message }}</div>

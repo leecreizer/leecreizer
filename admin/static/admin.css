@@ -156,6 +156,43 @@ h2 { font-size: 15.5px; font-weight: 650; margin: 14px 0 8px; letter-spacing: -.
 .login-card .btn-primary { margin-top: 8px; padding: 13px; font-size: 14px; border-radius: 15px; }
 .login-card .small { margin-top: 16px; }
 
+/* ---------- 톱바 (레퍼런스의 'Floor Main' 스트립) ---------- */
+.topbar {
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 12px; min-height: 44px;
+  padding: 2px 8px 18px;
+}
+.crumb { display: flex; gap: 9px; align-items: baseline; font-size: 13px; }
+.crumb strong { font-size: 15.5px; font-weight: 700; letter-spacing: -.02em; }
+.topbar-actions { display: flex; gap: 8px; align-items: center; }
+
+/* ---------- 듀오 패널 (좌: 내비/요약 · 우: 작업 영역) ---------- */
+.duo { display: flex; gap: 16px; align-items: flex-start; }
+.duo-side { width: 330px; flex-shrink: 0; }
+.duo-main { flex: 1; min-width: 0; }
+.panel-title {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 18px; font-weight: 700;
+  margin: 2px 0 14px;
+  letter-spacing: -.02em;
+}
+.panel-head .panel-title, .cat-nav-head .panel-title, .detail-head .panel-title { margin: 0; }
+.stat-rows { display: flex; flex-direction: column; gap: 8px; }
+.stat-row {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--card);
+  border-radius: 14px;
+  padding: 12.5px 14px;
+  box-shadow: var(--shadow-card);
+  font-weight: 600; font-size: 13.5px;
+  color: var(--ink);
+  transition: transform .14s, box-shadow .14s;
+}
+.stat-row:hover { transform: translateY(-1px); box-shadow: var(--shadow-lift); }
+.stat-row .grow { flex: 1; }
+.chev { color: var(--muted); font-size: 17px; line-height: 1; }
+.stat-row-warn .cat-count { background: var(--danger-wash); color: var(--danger); }
+
 /* ---------- ③ 패널(틴트) ---------- */
 .panel {
   background: var(--tint);
@@ -256,6 +293,12 @@ legend { font-size: 11px; font-weight: 600; color: var(--muted); padding: 0 6px;
   margin-bottom: 16px;
 }
 .filter-bar input, .filter-bar select { min-width: 160px; border-color: transparent; box-shadow: var(--shadow-card); }
+/* 패널 내부에 들어간 필터는 입력 행으로 (레퍼런스의 Add todo 줄) */
+.list-area .filter-bar {
+  background: transparent; backdrop-filter: none; border: none;
+  padding: 0 0 6px; margin-bottom: 6px;
+}
+.list-area .filter-bar input { flex: 1; }
 .upload-row { display: flex; gap: 10px; align-items: center; margin-top: 8px; }
 
 /* ---------- 뱃지 · 칩 ---------- */
@@ -325,12 +368,18 @@ a.stat:hover { transform: translateY(-3px); box-shadow: var(--shadow-lift); }
 /* ---------- 분할 화면: 폴더 + 콘텐츠 ---------- */
 .split { display: flex; gap: 16px; align-items: flex-start; }
 .split-main { flex: 1; min-width: 0; }
-.cat-nav { width: 258px; flex-shrink: 0; padding: 14px; position: sticky; top: 30px; }
+.cat-nav {
+  width: 272px; flex-shrink: 0;
+  padding: 18px 14px 14px;
+  position: sticky; top: 24px;
+  height: calc(100vh - 110px);
+  min-height: 420px;
+  overflow-y: auto;
+}
 .cat-nav-head {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 2px 8px 10px; margin-bottom: 8px;
+  padding: 0 8px 12px; margin-bottom: 8px;
 }
-.cat-nav-head strong { font-size: 13px; font-weight: 650; color: var(--ink); }
 .cat-item {
   display: flex; align-items: center; gap: 6px;
   padding: 8.5px 12px;
@@ -496,7 +545,10 @@ dialog fieldset { background: #f7f9fc; border-color: transparent; }
   .sidebar-foot { flex-direction: row; padding: 0 0 0 10px; }
   .content { padding: 20px 16px 40px; }
   .split { flex-direction: column; }
-  .cat-nav { width: 100%; position: static; }
+  .cat-nav { width: 100%; position: static; height: auto; min-height: 0; }
+  .duo { flex-direction: column; }
+  .duo-side { width: 100%; }
+  .topbar { flex-wrap: wrap; }
   .work-row { flex-direction: column; }
   .detail-panel { width: 100%; position: static; max-height: none; }
   .stat-grid { grid-template-columns: repeat(2, 1fr); }

@@ -1,10 +1,9 @@
 {% extends "base.html" %}
 {% block title %}마스터 일괄등록{% endblock %}
-{% block body %}
-<div class="page-head">
-  <h1><span class="eyebrow">Bulk Import</span>콘텐츠 마스터 일괄등록 <span class="muted">CSV 업로드</span></h1>
+{% block actions %}
   <a class="btn" href="{{ url_for('contents.bulk_template') }}">템플릿 다운로드</a>
-</div>
+{% endblock %}
+{% block body %}
 
 <section class="panel">
   <h2>업로드</h2>

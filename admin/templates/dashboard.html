@@ -1,35 +1,56 @@
 {% extends "base.html" %}
 {% block title %}대시보드{% endblock %}
 {% block body %}
-<div class="page-head">
-  <h1><span class="eyebrow">Overview</span>대시보드</h1>
-</div>
-<div class="stat-grid">
-  <a class="stat" href="{{ url_for('org.index') }}"><span class="num">{{ stats.channels }}</span>유통 채널</a>
-  <a class="stat" href="{{ url_for('org.index') }}"><span class="num">{{ stats.groups }}</span>사용자 그룹</a>
-  <a class="stat" href="{{ url_for('org.index') }}"><span class="num">{{ stats.users }}</span>사용자</a>
-  <a class="stat" href="{{ url_for('categories.index') }}"><span class="num">{{ stats.categories }}</span>카테고리</a>
-  <a class="stat" href="{{ url_for('contents.index') }}"><span class="num">{{ stats.contents }}</span>전체 콘텐츠</a>
-  <a class="stat" href="{{ url_for('contents.index', status='published') }}"><span class="num">{{ stats.published }}</span>노출중 콘텐츠</a>
-  <a class="stat {{ 'stat-warn' if stats.no_master }}" href="{{ url_for('contents.index') }}"><span class="num">{{ stats.no_master }}</span>마스터 미등록</a>
-  <a class="stat" href="{{ url_for('tags.index') }}"><span class="num">{{ stats.tags }}</span>노출 태그</a>
-</div>
+<div class="duo">
+  <section class="panel duo-side">
+    <h2 class="panel-title">현황</h2>
+    <div class="stat-rows">
+      <a class="stat-row" href="{{ url_for('org.index') if g.user['role'] == 'admin' else '#' }}">
+        <span class="grow">유통 채널</span><span class="cat-count">{{ stats.channels }}</span><span class="chev">›</span>
+      </a>
+      <a class="stat-row" href="{{ url_for('org.index') if g.user['role'] == 'admin' else '#' }}">
+        <span class="grow">사용자 그룹</span><span class="cat-count">{{ stats.groups }}</span><span class="chev">›</span>
+      </a>
+      <a class="stat-row" href="{{ url_for('org.index') if g.user['role'] == 'admin' else '#' }}">
+        <span class="grow">사용자</span><span class="cat-count">{{ stats.users }}</span><span class="chev">›</span>
+      </a>
+      <a class="stat-row" href="{{ url_for('categories.index') }}">
+        <span class="grow">카테고리</span><span class="cat-count">{{ stats.categories }}</span><span class="chev">›</span>
+      </a>
+      <a class="stat-row" href="{{ url_for('contents.index') }}">
+        <span class="grow">전체 콘텐츠</span><span class="cat-count">{{ stats.contents }}</span><span class="chev">›</span>
+      </a>
+      <a class="stat-row" href="{{ url_for('contents.index', status='published') }}">
+        <span class="grow">노출중 콘텐츠</span><span class="cat-count">{{ stats.published }}</span><span class="chev">›</span>
+      </a>
+      <a class="stat-row {{ 'stat-row-warn' if stats.no_master }}" href="{{ url_for('contents.index') }}">
+        <span class="grow">마스터 미등록</span><span class="cat-count">{{ stats.no_master }}</span><span class="chev">›</span>
+      </a>
+      <a class="stat-row" href="{{ url_for('tags.index') }}">
+        <span class="grow">노출 태그</span><span class="cat-count">{{ stats.tags }}</span><span class="chev">›</span>
+      </a>
+    </div>
+  </section>
 
-<h2>최근 수정 콘텐츠</h2>
-<table class="table">
-  <thead><tr><th>코드</th><th>이름</th><th>상태</th><th>수정일시</th><th></th></tr></thead>
-  <tbody>
-  {% for c in recent %}
-    <tr>
-      <td class="mono">{{ c['code'] }}</td>
-      <td>{{ c['name'] }}</td>
-      <td><span class="badge badge-{{ c['status'] }}">{{ {'draft':'작성중','published':'노출','hidden':'숨김'}[c['status']] }}</span></td>
-      <td class="muted">{{ c['updated_at'] }}</td>
-      <td><a class="btn btn-sm" href="{{ url_for('contents.form', cid=c['id']) }}">수정</a></td>
-    </tr>
-  {% else %}
-    <tr><td colspan="5" class="muted">콘텐츠가 없습니다.</td></tr>
-  {% endfor %}
-  </tbody>
-</table>
+  <section class="panel duo-main">
+    <h2 class="panel-title">최근 수정 콘텐츠</h2>
+    <table class="table">
+      <thead><tr><th>코드</th><th>이름</th><th>상태</th><th>수정일시</th><th></th></tr></thead>
+      <tbody>
+      {% for c in recent %}
+        <tr>
+          <td class="mono">{{ c['code'] }}</td>
+          <td>{{ c['name'] }}</td>
+          <td><span class="badge badge-{{ c['status'] }}">{{ {'draft':'작성중','published':'노출','hidden':'숨김'}[c['status']] }}</span></td>
+          <td class="muted">{{ c['updated_at'] }}</td>
+          <td><a class="btn btn-sm" href="{{ url_for('contents.index', selected=c['id']) }}">열기</a></td>
+        </tr>
+      {% else %}
+        <tr><td colspan="5" class="muted">콘텐츠가 없습니다.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    <p class="muted small"><a href="{{ url_for('contents.index') }}">콘텐츠 관리로 이동 →</a></p>
+  </section>
+</div>
 {% endblock %}

@@ -1,20 +1,16 @@
 {% extends "base.html" %}
 {% block title %}콘텐츠 관리{% endblock %}
+{% block actions %}
+  <a class="btn" href="{{ url_for('contents.export', **list_args) }}" title="현재 필터 기준 CSV 다운로드">내보내기</a>
+  <a class="btn" href="{{ url_for('contents.bulk') }}">일괄등록</a>
+  <a class="btn btn-primary" href="{{ url_for('contents.index', new=1, **list_args) }}">+ 콘텐츠 등록</a>
+{% endblock %}
 {% block body %}
 {% set list_url = url_for('contents.index', **list_args) %}
-<div class="page-head">
-  <h1><span class="eyebrow">Content Workspace</span>콘텐츠 관리 <span class="muted">폴더 · 리스트 · 마스터 정보를 한 화면에서</span></h1>
-  <div class="actions">
-    <a class="btn" href="{{ url_for('contents.export', **list_args) }}" title="현재 필터 기준 CSV 다운로드">내보내기</a>
-    <a class="btn" href="{{ url_for('contents.bulk') }}">일괄등록</a>
-    <a class="btn btn-primary" href="{{ url_for('contents.index', new=1, **list_args) }}">+ 콘텐츠 등록</a>
-  </div>
-</div>
-
 <div class="split {{ 'detail-open' if detail_open }}">
   <aside class="cat-nav panel">
     <div class="cat-nav-head">
-      <strong>Folders</strong>
+      <h2 class="panel-title">폴더</h2>
       <button class="btn btn-xs" data-dialog="category-dialog" title="최상위 폴더 추가">+ 폴더</button>
     </div>
     <a class="cat-item cat-all {{ 'active' if not f_category }}"
@@ -45,21 +41,23 @@
   </aside>
 
   <div class="split-main">
-    <form class="filter-bar" method="get">
-      {% if f_category %}<input type="hidden" name="category_id" value="{{ f_category }}">{% endif %}
-      <select name="status">
-        <option value="">전체 상태</option>
-        {% for key, label in status_labels.items() %}
-          <option value="{{ key }}" {{ 'selected' if f_status == key }}>{{ label }}</option>
-        {% endfor %}
-      </select>
-      <input name="q" value="{{ f_q }}" placeholder="콘텐츠명 / 코드 검색">
-      <button class="btn btn-primary">검색</button>
-      <a class="btn" href="{{ url_for('contents.index', category_id=f_category or none) }}">초기화</a>
-    </form>
-
     <div class="work-row">
       <div class="panel list-area">
+        <div class="panel-head">
+          <h2 class="panel-title">콘텐츠 <span class="cat-count">{{ items|length }}</span></h2>
+        </div>
+        <form class="filter-bar" method="get">
+          {% if f_category %}<input type="hidden" name="category_id" value="{{ f_category }}">{% endif %}
+          <select name="status">
+            <option value="">전체 상태</option>
+            {% for key, label in status_labels.items() %}
+              <option value="{{ key }}" {{ 'selected' if f_status == key }}>{{ label }}</option>
+            {% endfor %}
+          </select>
+          <input name="q" value="{{ f_q }}" placeholder="콘텐츠명 / 코드 검색">
+          <button class="btn btn-primary">검색</button>
+          <a class="btn" href="{{ url_for('contents.index', category_id=f_category or none) }}">초기화</a>
+        </form>
         <table class="table">
           <thead>
             <tr>
@@ -106,7 +104,7 @@
           {% endfor %}
           </tbody>
         </table>
-        <p class="muted small">총 {{ items|length }}건 · 이름과 상태는 행에서 바로 수정 후 [저장]</p>
+        <p class="muted small">이름과 상태는 행에서 바로 수정 후 [저장]</p>
       </div>
 
       {% if detail_open %}

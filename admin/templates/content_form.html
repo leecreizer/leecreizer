@@ -1,12 +1,13 @@
 {% extends "base.html" %}
 {% block title %}{{ '콘텐츠 수정' if content else '콘텐츠 등록' }}{% endblock %}
-{% block body %}
-<div class="page-head">
-  <h1><span class="eyebrow">Content Spec{% if content %} · {{ content['code'] }}{% endif %}</span>{{ '콘텐츠 수정' if content else '콘텐츠 등록' }}</h1>
+{% block actions %}
   <a class="btn" href="{{ url_for('contents.index') }}">← 목록으로</a>
-</div>
-
+{% endblock %}
+{% block body %}
 <div class="panel">
+  <h2 class="panel-title">{{ '콘텐츠 수정' if content else '콘텐츠 등록' }}
+    {% if content %}<span class="mono muted">{{ content['code'] }}</span>{% endif %}
+  </h2>
   {% set cancel_url = url_for('contents.index') %}
   {% include "_spec_form.html" %}
 </div>
