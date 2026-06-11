@@ -14,6 +14,14 @@ from .db import get_db, now
 
 bp = Blueprint("contents", __name__, url_prefix="/contents")
 
+
+def back(default_endpoint: str = "contents.index"):
+    """워크스페이스 등 호출한 화면으로 복귀 (next 폼 필드, 내부 경로만 허용)."""
+    nxt = request.form.get("next", "")
+    if nxt.startswith("/") and not nxt.startswith("//"):
+        return redirect(nxt)
+    return redirect(url_for(default_endpoint))
+
 STATUS_LABELS = {"draft": "작성중", "published": "노출", "hidden": "숨김"}
 STATUS_BY_LABEL = {v: k for k, v in STATUS_LABELS.items()}
 
@@ -72,11 +80,75 @@ def index():
     channels = db.execute(
         "SELECT * FROM channels WHERE active=1 ORDER BY sort_order, id"
     ).fetchall()
+
+    # 상세 패널: ?selected=<id> 는 마스터 수정, ?new=1 은 신규 등록을 같은 화면에서 처리
+    selected_id = request.args.get("selected", type=int)
+    creating = request.args.get("new") is not None
+    sel_content = sel_master = None
+    sel_tags: set[int] = set()
+    if selected_id:
+        sel_content = db.execute(
+            "SELECT * FROM contents WHERE id=?", (selected_id,)
+        ).fetchone()
+        if sel_content is None:
+            selected_id = None
+        else:
+            sel_master = db.execute(
+                "SELECT * FROM content_master WHERE content_id=?", (selected_id,)
+            ).fetchone()
+            sel_tags = {
+                r["tag_id"]
+                for r in db.execute(
+                    "SELECT tag_id FROM content_tags WHERE content_id=?", (selected_id,)
+                )
+            }
+
+    folders = db.execute(
+        "SELECT * FROM tag_folders WHERE active=1 ORDER BY sort_order, id"
+    ).fetchall()
+    tags_by_folder: dict[int, list] = {}
+    for t in db.execute("SELECT * FROM tags WHERE active=1 ORDER BY sort_order, id"):
+        tags_by_folder.setdefault(t["folder_id"], []).append(t)
+
+    list_args = {
+        "category_id": category_id or None,
+        "status": status or None,
+        "q": q or None,
+    }
+    detail_next = url_for(
+        "contents.index", **list_args, selected=selected_id if sel_content else None
+    )
     return render_template(
         "contents.html",
         items=items, flat=flat, channels=channels, status_labels=STATUS_LABELS,
         f_category=category_id, f_status=status, f_q=q,
+        content=sel_content, master=sel_master, selected_tags=sel_tags,
+        detail_open=bool(sel_content or creating),
+        preselect_category=sel_content["category_id"] if sel_content else category_id,
+        folders=folders, tags_by_folder=tags_by_folder,
+        list_args=list_args, detail_next=detail_next,
     )
+
+
+@bp.route("/<int:cid>/quick", methods=["POST"])
+@login_required
+def quick_update(cid: int):
+    """리스트 행에서 이름·노출상태를 바로 수정."""
+    db = get_db()
+    name = request.form.get("name", "").strip()
+    status = request.form.get("status", "draft")
+    if status not in STATUS_LABELS:
+        status = "draft"
+    if not name:
+        flash("콘텐츠명은 비울 수 없습니다.", "error")
+        return back()
+    db.execute(
+        "UPDATE contents SET name=?, status=?, updated_at=? WHERE id=?",
+        (name, status, now(), cid),
+    )
+    db.commit()
+    flash(f"'{name}' — {STATUS_LABELS[status]} 상태로 저장했습니다.", "success")
+    return back()
 
 
 # ---------- 등록/수정 (기본정보 + 마스터 + 태그 통합 폼) ----------
@@ -170,7 +242,7 @@ def form(cid: int | None = None):
                     )
                 db.commit()
                 flash(f"콘텐츠 '{name}'을(를) 저장했습니다.", "success")
-                return redirect(url_for("contents.index"))
+                return back()
 
     # 통합 화면에서 폴더를 선택한 채 "+ 콘텐츠"를 누르면 해당 카테고리를 미리 선택
     preselect_category = request.args.get("category_id", type=int)
@@ -200,7 +272,7 @@ def delete(cid: int):
     db.execute("DELETE FROM contents WHERE id=?", (cid,))
     db.commit()
     flash("콘텐츠를 삭제했습니다.", "success")
-    return redirect(url_for("contents.index"))
+    return back()
 
 
 # ---------- 일괄등록 (CSV) ----------

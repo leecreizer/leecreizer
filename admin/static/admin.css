@@ -346,6 +346,49 @@ a.cat-item { color: var(--ink); font-weight: 600; }
 .cat-item:hover .cat-count { display: none; }
 .cat-nav-foot { padding: 10px 6px 0; margin: 6px 0 0; border-top: 1px solid var(--line-soft); }
 
+/* ---------- 워크스페이스: 리스트 + 상세 패널 ---------- */
+.work-row { display: flex; gap: 16px; align-items: flex-start; }
+.list-area { flex: 1; min-width: 0; }
+.detail-panel {
+  width: 460px; flex-shrink: 0;
+  position: sticky; top: 26px;
+  max-height: calc(100vh - 52px);
+  overflow-y: auto;
+  border-color: var(--cobalt-line);
+  box-shadow: -8px 0 24px rgba(13, 27, 77, .05);
+}
+.detail-head {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 8px;
+  padding-bottom: 10px; margin-bottom: 4px;
+  border-bottom: 1.5px solid var(--ink);
+}
+.detail-head h2 { margin: 0; font-size: 16px; }
+.detail-open .opt { display: none; }
+.row-active td { background: var(--cobalt-wash) !important; }
+.row-active td:first-child { box-shadow: inset 2px 0 0 var(--cobalt); }
+
+/* 인라인 빠른 수정 입력 */
+.qe-input {
+  padding: 5px 9px;
+  font-size: 12.5px;
+  border-radius: 5px;
+  border-color: transparent;
+  background: transparent;
+  width: 100%;
+  min-width: 90px;
+}
+.qe-input:hover { border-color: var(--line); background: var(--card); }
+.qe-input:focus { background: var(--card); }
+.qe-status { width: auto; min-width: 78px; }
+
+/* 스펙 폼(파셜) 섹션 구분 */
+.spec-form { display: flex; flex-direction: column; }
+.spec-section { padding: 6px 0 10px; }
+.spec-section + .spec-section { border-top: 1px dashed var(--line); margin-top: 6px; }
+.spec-section h2 { margin: 8px 0 12px; }
+.spec-section .eyebrow { margin-bottom: 1px; }
+.detail-panel .grid-3 { grid-template-columns: repeat(2, 1fr); }
+
 /* ---------- 카테고리 트리 ---------- */
 .tree { list-style: none; margin: 0; padding-left: 30px; }
 .tree-root { padding-left: 0; }
@@ -427,6 +470,8 @@ dialog h3 {
   .content { padding: 20px; }
   .split { flex-direction: column; }
   .cat-nav { width: 100%; position: static; }
+  .work-row { flex-direction: column; }
+  .detail-panel { width: 100%; position: static; max-height: none; }
   .stat-grid { grid-template-columns: repeat(2, 1fr); }
   .grid-2, .grid-3 { grid-template-columns: 1fr; }
 }

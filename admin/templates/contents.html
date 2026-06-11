@@ -1,15 +1,16 @@
 {% extends "base.html" %}
 {% block title %}콘텐츠 관리{% endblock %}
 {% block body %}
+{% set list_url = url_for('contents.index', **list_args) %}
 <div class="page-head">
-  <h1><span class="eyebrow">Content Library</span>콘텐츠 관리 <span class="muted">폴더(카테고리) · 콘텐츠 통합 관리</span></h1>
+  <h1><span class="eyebrow">Content Workspace</span>콘텐츠 관리 <span class="muted">폴더 · 리스트 · 마스터 정보를 한 화면에서</span></h1>
   <div class="actions">
     <a class="btn" href="{{ url_for('contents.bulk') }}">일괄등록</a>
-    <a class="btn btn-primary" href="{{ url_for('contents.form', category_id=f_category or none) }}">+ 콘텐츠 등록</a>
+    <a class="btn btn-primary" href="{{ url_for('contents.index', new=1, **list_args) }}">+ 콘텐츠 등록</a>
   </div>
 </div>
 
-<div class="split">
+<div class="split {{ 'detail-open' if detail_open }}">
   <aside class="cat-nav panel">
     <div class="cat-nav-head">
       <strong>Folders</strong>
@@ -56,41 +57,71 @@
       <a class="btn" href="{{ url_for('contents.index', category_id=f_category or none) }}">초기화</a>
     </form>
 
-    <div class="panel">
-      <table class="table">
-        <thead>
-          <tr><th>코드</th><th>콘텐츠명</th><th>카테고리</th><th>태그</th><th>마스터</th><th>상태</th><th>수정일시</th><th></th></tr>
-        </thead>
-        <tbody>
-        {% for c in items %}
-          <tr>
-            <td class="mono">{{ c['code'] }}</td>
-            <td>
-              <a href="{{ url_for('contents.form', cid=c['id']) }}"><strong>{{ c['name'] }}</strong></a>
-              {% if c['thumbnail_url'] %}<span class="chip">IMG</span>{% endif %}
-            </td>
-            <td class="muted">{{ c['path'] or '(미지정)' }}</td>
-            <td>
-              {% for t in c['tags'] %}<span class="chip" style="background:{{ t['color'] }};color:#fff">{{ t['name'] }}</span>{% endfor %}
-            </td>
-            <td>{% if c['has_master'] %}<span class="badge badge-published">등록</span>{% else %}<span class="badge badge-draft">미등록</span>{% endif %}</td>
-            <td><span class="badge badge-{{ c['status'] }}">{{ status_labels[c['status']] }}</span></td>
-            <td class="muted small">{{ c['updated_at'] }}</td>
-            <td class="actions">
-              <a class="btn btn-sm" href="{{ url_for('contents.form', cid=c['id']) }}">수정</a>
-              <form method="post" action="{{ url_for('contents.delete', cid=c['id']) }}"
-                    onsubmit="return confirm('[{{ c['name'] }}] 콘텐츠를 삭제할까요?')">
-                <button class="btn btn-sm btn-danger">삭제</button>
-              </form>
-            </td>
-          </tr>
-        {% else %}
-          <tr><td colspan="8" class="muted">이 폴더에 콘텐츠가 없습니다.
-            <a href="{{ url_for('contents.form', category_id=f_category or none) }}">+ 바로 등록하기</a></td></tr>
-        {% endfor %}
-        </tbody>
-      </table>
-      <p class="muted small">총 {{ items|length }}건</p>
+    <div class="work-row">
+      <div class="panel list-area">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>코드</th><th>콘텐츠명</th><th class="opt">카테고리</th>
+              <th>상태</th><th class="opt">태그</th><th class="opt">마스터</th><th></th>
+            </tr>
+          </thead>
+          <tbody>
+          {% for c in items %}
+            {% set row_url = url_for('contents.index', selected=c['id'], **list_args) %}
+            <tr class="{{ 'row-active' if content and content['id'] == c['id'] }}">
+              <td class="mono"><a href="{{ row_url }}">{{ c['code'] }}</a></td>
+              <td>
+                <input class="qe-input" form="qe{{ c['id'] }}" name="name" value="{{ c['name'] }}" required>
+              </td>
+              <td class="muted opt">{{ c['path'] or '(미지정)' }}</td>
+              <td>
+                <select class="qe-input qe-status" form="qe{{ c['id'] }}" name="status">
+                  {% for key, label in status_labels.items() %}
+                    <option value="{{ key }}" {{ 'selected' if c['status'] == key }}>{{ label }}</option>
+                  {% endfor %}
+                </select>
+              </td>
+              <td class="opt">
+                {% for t in c['tags'] %}<span class="chip" style="background:{{ t['color'] }};color:#fff">{{ t['name'] }}</span>{% endfor %}
+              </td>
+              <td class="opt">{% if c['has_master'] %}<span class="badge badge-published">등록</span>{% else %}<span class="badge badge-draft">미등록</span>{% endif %}</td>
+              <td class="actions">
+                <form id="qe{{ c['id'] }}" method="post" action="{{ url_for('contents.quick_update', cid=c['id']) }}">
+                  <input type="hidden" name="next" value="{{ request.full_path }}">
+                </form>
+                <button class="btn btn-sm" form="qe{{ c['id'] }}" title="이름·상태 바로 저장">저장</button>
+                <a class="btn btn-sm btn-primary" href="{{ row_url }}" title="마스터 정보 열기">마스터</a>
+                <form method="post" action="{{ url_for('contents.delete', cid=c['id']) }}"
+                      onsubmit="return confirm('[{{ c['name'] }}] 콘텐츠를 삭제할까요?')">
+                  <input type="hidden" name="next" value="{{ list_url }}">
+                  <button class="btn btn-sm btn-danger">삭제</button>
+                </form>
+              </td>
+            </tr>
+          {% else %}
+            <tr><td colspan="7" class="muted">이 폴더에 콘텐츠가 없습니다.
+              <a href="{{ url_for('contents.index', new=1, **list_args) }}">+ 바로 등록하기</a></td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+        <p class="muted small">총 {{ items|length }}건 · 이름과 상태는 행에서 바로 수정 후 [저장]</p>
+      </div>
+
+      {% if detail_open %}
+      <aside class="detail-panel panel">
+        <div class="detail-head">
+          <h2>
+            <span class="eyebrow">{{ 'Content Spec · ' + content['code'] if content else 'New Content' }}</span>
+            {{ content['name'] if content else '새 콘텐츠 등록' }}
+          </h2>
+          <a class="btn btn-sm" href="{{ list_url }}" title="패널 닫기">×</a>
+        </div>
+        {% set next_url = detail_next %}
+        {% set cancel_url = list_url %}
+        {% include "_spec_form.html" %}
+      </aside>
+      {% endif %}
     </div>
   </div>
 </div>

@@ -105,6 +105,48 @@ def test_content_form_and_master(client):
     assert "테스트 책상".encode() in listing
 
 
+def test_workspace_detail_panel(client):
+    """리스트에서 콘텐츠 선택 시 같은 화면에 마스터 패널이 열린다."""
+    login(client)
+    body = client.get("/contents/?selected=1").data.decode()
+    assert "마스터 정보" in body          # 상세 패널
+    assert "BED-001" in body              # 선택된 콘텐츠
+    assert "qe1" in body                  # 인라인 빠른 수정 폼
+
+    body = client.get("/contents/?new=1&category_id=3").data.decode()
+    assert "새 콘텐츠 등록" in body       # 신규 등록 패널 (카테고리 사전 선택)
+
+
+def test_quick_update_inline(client):
+    """행에서 이름·노출상태 바로 수정."""
+    login(client)
+    res = client.post(
+        "/contents/1/quick",
+        data={"name": "이름변경 침대", "status": "hidden", "next": "/contents/?category_id=3"},
+    )
+    assert res.status_code == 302
+    assert res.headers["Location"] == "/contents/?category_id=3"
+    body = client.get("/contents/?q=이름변경").data.decode()
+    assert "이름변경 침대" in body
+
+
+def test_detail_panel_save_returns_to_workspace(client):
+    """상세 패널 저장 후 워크스페이스(선택 유지)로 복귀."""
+    login(client)
+    res = client.post(
+        "/contents/1/edit",
+        data={
+            "code": "BED-001", "name": "수면공감 평상형 침대 Q", "category_id": "3",
+            "status": "published", "brand": "리브홈", "price": "590000", "unit": "EA",
+            "next": "/contents/?category_id=3&selected=1",
+        },
+    )
+    assert res.status_code == 302
+    assert res.headers["Location"] == "/contents/?category_id=3&selected=1"
+    body = client.get("/contents/?selected=1").data.decode()
+    assert "590000" in body  # 저장된 마스터 가격이 패널에 반영
+
+
 def test_bulk_upload(client):
     login(client)
     csv_data = (
