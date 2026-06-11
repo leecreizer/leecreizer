@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}{{ '콘텐츠 수정' if content else '콘텐츠 등록' }}{% endblock %}
+{% block body %}
+<div class="page-head">
+  <h1>{{ '콘텐츠 수정' if content else '콘텐츠 등록' }}
+    {% if content %}<span class="muted small mono">{{ content['code'] }}</span>{% endif %}
+  </h1>
+  <a class="btn" href="{{ url_for('contents.index') }}">← 목록으로</a>
+</div>
+
+<form method="post" class="form-grid">
+  <section class="panel">
+    <h2>기본 정보</h2>
+    <div class="grid-2">
+      <label>콘텐츠 코드 *
+        <input name="code" required value="{{ content['code'] if content }}" placeholder="예: BED-001">
+      </label>
+      <label>콘텐츠명 *
+        <input name="name" required value="{{ content['name'] if content }}">
+      </label>
+      <label>카테고리
+        <select name="category_id">
+          <option value="">(미지정)</option>
+          {% for c in flat %}
+            <option value="{{ c['id'] }}" {{ 'selected' if content and content['category_id'] == c['id'] }}>{{ ('&nbsp;' * (c['depth'] * 3)) | safe }}{{ '└ ' if c['depth'] }}{{ c['name'] }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>상태
+        <select name="status">
+          {% for key, label in status_labels.items() %}
+            <option value="{{ key }}" {{ 'selected' if content and content['status'] == key }}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>썸네일 URL
+        <input name="thumbnail_url" value="{{ content['thumbnail_url'] if content }}" placeholder="https://...">
+      </label>
+    </div>
+    <label>설명
+      <textarea name="description" rows="3">{{ content['description'] if content }}</textarea>
+    </label>
+  </section>
+
+  <section class="panel">
+    <h2>마스터 정보</h2>
+    <div class="grid-3">
+      <label>브랜드 <input name="brand" value="{{ master['brand'] if master }}"></label>
+      <label>모델번호 <input name="model_no" value="{{ master['model_no'] if master }}"></label>
+      <label>단위
+        <input name="unit" value="{{ master['unit'] if master else 'EA' }}">
+      </label>
+      <label>판매가(원) <input type="number" name="price" min="0" value="{{ master['price'] if master else 0 }}"></label>
+      <label>원가(원) <input type="number" name="cost" min="0" value="{{ master['cost'] if master else 0 }}"></label>
+      <label>출시일 <input type="date" name="release_date" value="{{ master['release_date'] if master }}"></label>
+      <label>가로(mm) <input type="number" name="width_mm" min="0" value="{{ master['width_mm'] if master else 0 }}"></label>
+      <label>세로(mm) <input type="number" name="depth_mm" min="0" value="{{ master['depth_mm'] if master else 0 }}"></label>
+      <label>높이(mm) <input type="number" name="height_mm" min="0" value="{{ master['height_mm'] if master else 0 }}"></label>
+      <label>재질 <input name="material" value="{{ master['material'] if master }}"></label>
+      <label>색상 <input name="color" value="{{ master['color'] if master }}"></label>
+      <label>제조사 <input name="manufacturer" value="{{ master['manufacturer'] if master }}"></label>
+      <label>원산지 <input name="origin" value="{{ master['origin'] if master }}"></label>
+    </div>
+    <label>메모
+      <textarea name="memo" rows="2">{{ master['memo'] if master }}</textarea>
+    </label>
+  </section>
+
+  <section class="panel">
+    <h2>설계리스트 노출 태그</h2>
+    {% for folder in folders %}
+      <div class="tag-folder-row">
+        <strong>{{ folder['name'] }}</strong>
+        <span>
+        {% for t in tags_by_folder.get(folder['id'], []) %}
+          <label class="chip-check">
+            <input type="checkbox" name="tag_ids" value="{{ t['id'] }}" {{ 'checked' if t['id'] in selected_tags }}>
+            <span class="chip" style="--chip-color: {{ t['color'] }}">{{ t['name'] }}</span>
+          </label>
+        {% else %}
+          <span class="muted small">태그 없음</span>
+        {% endfor %}
+        </span>
+      </div>
+    {% endfor %}
+    <p class="muted small">태그는 <a href="{{ url_for('tags.index') }}">태그 마스터</a>에서 관리합니다.</p>
+  </section>
+
+  <div class="form-actions">
+    <a class="btn" href="{{ url_for('contents.index') }}">취소</a>
+    <button class="btn btn-primary">저장</button>
+  </div>
+</form>
+{% endblock %}

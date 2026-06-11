@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}카테고리 관리{% endblock %}
+
+{% macro render_node(node, channels) %}
+<li>
+  <div class="tree-row {{ 'inactive' if not node['active'] }}">
+    <span class="tree-name">{{ node['name'] }}</span>
+    <span class="muted small">콘텐츠 {{ node['content_count'] }}건</span>
+    <span class="tree-exposure">
+      {% for ch in channels %}
+        <span class="chip {{ 'chip-on' if ch['id'] in node['channel_ids'] else 'chip-off' }}">{{ ch['name'] }}</span>
+      {% endfor %}
+    </span>
+    <span class="actions">
+      <form method="post" action="{{ url_for('categories.move', cid=node['id'], direction='up') }}"><button class="btn btn-sm" title="위로">▲</button></form>
+      <form method="post" action="{{ url_for('categories.move', cid=node['id'], direction='down') }}"><button class="btn btn-sm" title="아래로">▼</button></form>
+      <button class="btn btn-sm" data-dialog="category-dialog" data-parent_id="{{ node['id'] }}">+ 하위</button>
+      <button class="btn btn-sm" data-dialog="category-dialog"
+              data-id="{{ node['id'] }}" data-name="{{ node['name'] }}"
+              data-parent_id="{{ node['parent_id'] or '' }}" data-active="{{ node['active'] }}"
+              data-channel_ids="{{ node['channel_ids']|join(',') }}">수정</button>
+      <form method="post" action="{{ url_for('categories.delete', cid=node['id']) }}"
+            onsubmit="return confirm('[{{ node['name'] }}] 카테고리를 하위 포함 삭제할까요?')">
+        <button class="btn btn-sm btn-danger">삭제</button>
+      </form>
+    </span>
+  </div>
+  {% if node['children'] %}
+  <ul class="tree">
+    {% for child in node['children'] %}{{ render_node(child, channels) }}{% endfor %}
+  </ul>
+  {% endif %}
+</li>
+{% endmacro %}
+
+{% block body %}
+<div class="page-head">
+  <h1>카테고리 관리 <span class="muted small">설계 페이지 노출 연동 · 계층 구조</span></h1>
+  <button class="btn btn-primary" data-dialog="category-dialog">+ 최상위 카테고리 추가</button>
+</div>
+
+<p class="hint">채널 칩이 <span class="chip chip-on">파란색</span>이면 해당 유통 채널의 설계 페이지에 노출되고,
+<span class="chip chip-off">회색</span>이면 노출되지 않습니다. 수정에서 채널별 노출을 변경하세요.</p>
+
+<ul class="tree tree-root">
+  {% for node in tree %}{{ render_node(node, channels) }}{% endfor %}
+</ul>
+
+<dialog id="category-dialog">
+  <form method="post" action="{{ url_for('categories.save') }}">
+    <h3 data-title-new="카테고리 추가" data-title-edit="카테고리 수정">카테고리</h3>
+    <input type="hidden" name="id">
+    <label>카테고리 이름 <input name="name" required></label>
+    <label>상위 카테고리
+      <select name="parent_id">
+        <option value="">(최상위)</option>
+        {% for c in flat %}
+          <option value="{{ c['id'] }}">{{ ('&nbsp;' * (c['depth'] * 3)) | safe }}{{ '└ ' if c['depth'] }}{{ c['name'] }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <fieldset>
+      <legend>설계 페이지 노출 채널</legend>
+      {% for ch in channels %}
+        <label class="check"><input type="checkbox" name="channel_ids" value="{{ ch['id'] }}" checked> {{ ch['name'] }}</label>
+      {% endfor %}
+    </fieldset>
+    <label class="check"><input type="checkbox" name="active" value="1" checked> 사용</label>
+    <div class="dialog-actions">
+      <button type="button" class="btn" onclick="this.closest('dialog').close()">취소</button>
+      <button class="btn btn-primary">저장</button>
+    </div>
+  </form>
+</dialog>
+{% endblock %}

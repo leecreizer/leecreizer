@@ -5,5 +5,7 @@ python-dotenv>=1.0
 requests>=2.31
 # optional: AI 게이트(USE_AI_GATE=true) 사용 시
 # prophet>=1.1
+# admin 관리 시스템(run_admin.py)
+flask>=3.0
 # dev
 pytest>=7.0

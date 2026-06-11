@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}콘텐츠 관리{% endblock %}
+{% block body %}
+<div class="page-head">
+  <h1>콘텐츠 관리 <span class="muted small">카테고리별 등록 · 수정</span></h1>
+  <div>
+    <a class="btn" href="{{ url_for('contents.bulk') }}">📤 일괄등록</a>
+    <a class="btn btn-primary" href="{{ url_for('contents.form') }}">+ 콘텐츠 등록</a>
+  </div>
+</div>
+
+<form class="filter-bar" method="get">
+  <select name="category_id">
+    <option value="">전체 카테고리</option>
+    {% for c in flat %}
+      <option value="{{ c['id'] }}" {{ 'selected' if f_category == c['id'] }}>{{ ('&nbsp;' * (c['depth'] * 3)) | safe }}{{ '└ ' if c['depth'] }}{{ c['name'] }}</option>
+    {% endfor %}
+  </select>
+  <select name="status">
+    <option value="">전체 상태</option>
+    {% for key, label in status_labels.items() %}
+      <option value="{{ key }}" {{ 'selected' if f_status == key }}>{{ label }}</option>
+    {% endfor %}
+  </select>
+  <input name="q" value="{{ f_q }}" placeholder="콘텐츠명 / 코드 검색">
+  <button class="btn btn-primary">검색</button>
+  <a class="btn" href="{{ url_for('contents.index') }}">초기화</a>
+</form>
+
+<table class="table">
+  <thead>
+    <tr><th>코드</th><th>콘텐츠명</th><th>카테고리</th><th>태그</th><th>마스터</th><th>상태</th><th>수정일시</th><th></th></tr>
+  </thead>
+  <tbody>
+  {% for c in items %}
+    <tr>
+      <td class="mono">{{ c['code'] }}</td>
+      <td>
+        {{ c['name'] }}
+        {% if c['thumbnail_url'] %}<span class="muted small">🖼</span>{% endif %}
+      </td>
+      <td class="muted">{{ c['path'] or '(미지정)' }}</td>
+      <td>
+        {% for t in c['tags'] %}<span class="chip" style="background:{{ t['color'] }};color:#fff">{{ t['name'] }}</span>{% endfor %}
+      </td>
+      <td>{% if c['has_master'] %}<span class="badge badge-published">등록</span>{% else %}<span class="badge badge-draft">미등록</span>{% endif %}</td>
+      <td><span class="badge badge-{{ c['status'] }}">{{ status_labels[c['status']] }}</span></td>
+      <td class="muted">{{ c['updated_at'] }}</td>
+      <td class="actions">
+        <a class="btn btn-sm" href="{{ url_for('contents.form', cid=c['id']) }}">수정</a>
+        <form method="post" action="{{ url_for('contents.delete', cid=c['id']) }}"
+              onsubmit="return confirm('[{{ c['name'] }}] 콘텐츠를 삭제할까요?')">
+          <button class="btn btn-sm btn-danger">삭제</button>
+        </form>
+      </td>
+    </tr>
+  {% else %}
+    <tr><td colspan="8" class="muted">조건에 맞는 콘텐츠가 없습니다.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+<p class="muted small">총 {{ items|length }}건</p>
+{% endblock %}

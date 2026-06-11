@@ -1,5 +1,6 @@
 .env
 state.json
+admin/admin.db
 *.tmp
 __pycache__/
 *.pyc

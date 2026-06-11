@@ -6,6 +6,19 @@
 > ⚠️ 교육용 스타터입니다. 실거래는 자금 손실 위험이 있으니 반드시 백테스트 →
 > 소액 → 페이퍼 트레이딩 순으로 검증하세요.
 
+## 설계 어드민 (별도 모듈)
+
+쿠홈 설계프로그램 스타일의 어드민 관리 시스템이 [`admin/`](admin/)에 포함되어 있습니다.
+로그인, 유통 채널별 사용자 그룹, 계층형 카테고리(채널별 노출 제어), 콘텐츠/마스터 정보,
+CSV 일괄등록, 설계리스트 노출 태그 마스터를 제공합니다.
+
+```bash
+pip install flask
+python run_admin.py   # http://localhost:5050, 초기 계정 admin / admin1234
+```
+
+화면 기획서: [`docs/admin_screen_plan.md`](docs/admin_screen_plan.md)
+
 ## 설치
 
 ```bash

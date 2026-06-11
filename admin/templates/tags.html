@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}태그 마스터{% endblock %}
+{% block body %}
+<div class="page-head">
+  <h1>태그 마스터 <span class="muted small">콘텐츠 폴더별 설계리스트 노출용</span></h1>
+  <button class="btn btn-primary" data-dialog="folder-dialog">+ 태그 폴더 추가</button>
+</div>
+
+{% for folder in folders %}
+<section class="panel {{ 'inactive' if not folder['active'] }}">
+  <div class="panel-head">
+    <h2>📁 {{ folder['name'] }} <span class="muted small">{{ folder['description'] }}</span>
+      {% if not folder['active'] %}<span class="badge badge-hidden">중지</span>{% endif %}
+    </h2>
+    <div class="actions">
+      <button class="btn btn-sm btn-primary" data-dialog="tag-dialog" data-folder_id="{{ folder['id'] }}">+ 태그</button>
+      <button class="btn btn-sm" data-dialog="folder-dialog"
+              data-id="{{ folder['id'] }}" data-name="{{ folder['name'] }}"
+              data-description="{{ folder['description'] }}" data-active="{{ folder['active'] }}">수정</button>
+      <form method="post" action="{{ url_for('tags.folder_delete', fid=folder['id']) }}"
+            onsubmit="return confirm('폴더 [{{ folder['name'] }}]와 소속 태그를 삭제할까요?')">
+        <button class="btn btn-sm btn-danger">삭제</button>
+      </form>
+    </div>
+  </div>
+  <div class="tag-list">
+    {% for t in tags_by_folder.get(folder['id'], []) %}
+      <span class="tag-item {{ 'inactive' if not t['active'] }}">
+        <span class="chip" style="background:{{ t['color'] }};color:#fff">{{ t['name'] }}</span>
+        <span class="muted small">{{ t['usage_count'] }}건 사용</span>
+        <button class="btn btn-xs" data-dialog="tag-dialog"
+                data-id="{{ t['id'] }}" data-folder_id="{{ t['folder_id'] }}" data-name="{{ t['name'] }}"
+                data-color="{{ t['color'] }}" data-active="{{ t['active'] }}">수정</button>
+        <form method="post" action="{{ url_for('tags.tag_delete', tid=t['id']) }}"
+              onsubmit="return confirm('태그 [{{ t['name'] }}]을(를) 삭제할까요? 콘텐츠 매핑도 함께 제거됩니다.')">
+          <button class="btn btn-xs btn-danger">×</button>
+        </form>
+      </span>
+    {% else %}
+      <span class="muted">태그가 없습니다.</span>
+    {% endfor %}
+  </div>
+</section>
+{% else %}
+<p class="muted">태그 폴더가 없습니다. 먼저 폴더를 추가하세요.</p>
+{% endfor %}
+
+<dialog id="folder-dialog">
+  <form method="post" action="{{ url_for('tags.folder_save') }}">
+    <h3 data-title-new="태그 폴더 추가" data-title-edit="태그 폴더 수정">태그 폴더</h3>
+    <input type="hidden" name="id">
+    <label>폴더 이름 <input name="name" required placeholder="예: 스타일"></label>
+    <label>설명 <input name="description"></label>
+    <label class="check"><input type="checkbox" name="active" value="1" checked> 사용</label>
+    <div class="dialog-actions">
+      <button type="button" class="btn" onclick="this.closest('dialog').close()">취소</button>
+      <button class="btn btn-primary">저장</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="tag-dialog">
+  <form method="post" action="{{ url_for('tags.tag_save') }}">
+    <h3 data-title-new="태그 추가" data-title-edit="태그 수정">태그</h3>
+    <input type="hidden" name="id">
+    <label>소속 폴더
+      <select name="folder_id" required>
+        {% for folder in folders %}<option value="{{ folder['id'] }}">{{ folder['name'] }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>태그 이름 <input name="name" required></label>
+    <label>색상 <input type="color" name="color" value="#6b7280"></label>
+    <label class="check"><input type="checkbox" name="active" value="1" checked> 사용</label>
+    <div class="dialog-actions">
+      <button type="button" class="btn" onclick="this.closest('dialog').close()">취소</button>
+      <button class="btn btn-primary">저장</button>
+    </div>
+  </form>
+</dialog>
+{% endblock %}

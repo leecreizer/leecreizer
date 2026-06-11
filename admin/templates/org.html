@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+{% block title %}채널 · 그룹 · 사용자{% endblock %}
+{% block body %}
+<h1>유통 채널별 사용자 그룹 관리</h1>
+
+<section class="panel">
+  <div class="panel-head">
+    <h2>유통 채널</h2>
+    <button class="btn btn-primary" data-dialog="channel-dialog">+ 채널 추가</button>
+  </div>
+  <table class="table">
+    <thead><tr><th>코드</th><th>이름</th><th>설명</th><th>그룹 수</th><th>상태</th><th></th></tr></thead>
+    <tbody>
+    {% for ch in channels %}
+      <tr>
+        <td class="mono">{{ ch['code'] }}</td>
+        <td>{{ ch['name'] }}</td>
+        <td class="muted">{{ ch['description'] }}</td>
+        <td>{{ ch['group_count'] }}</td>
+        <td>{% if ch['active'] %}<span class="badge badge-published">사용</span>{% else %}<span class="badge badge-hidden">중지</span>{% endif %}</td>
+        <td class="actions">
+          <button class="btn btn-sm" data-dialog="channel-dialog"
+                  data-id="{{ ch['id'] }}" data-code="{{ ch['code'] }}" data-name="{{ ch['name'] }}"
+                  data-description="{{ ch['description'] }}" data-active="{{ ch['active'] }}">수정</button>
+          <form method="post" action="{{ url_for('org.channel_delete', cid=ch['id']) }}"
+                onsubmit="return confirm('채널 [{{ ch['name'] }}]을(를) 삭제할까요?')">
+            <button class="btn btn-sm btn-danger">삭제</button>
+          </form>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<section class="panel">
+  <div class="panel-head">
+    <h2>사용자 그룹</h2>
+    <button class="btn btn-primary" data-dialog="group-dialog">+ 그룹 추가</button>
+  </div>
+  <table class="table">
+    <thead><tr><th>그룹명</th><th>소속 채널</th><th>설명</th><th>사용자 수</th><th>상태</th><th></th></tr></thead>
+    <tbody>
+    {% for gr in groups %}
+      <tr>
+        <td>{{ gr['name'] }}</td>
+        <td>{{ gr['channel_name'] }}</td>
+        <td class="muted">{{ gr['description'] }}</td>
+        <td>{{ gr['user_count'] }}</td>
+        <td>{% if gr['active'] %}<span class="badge badge-published">사용</span>{% else %}<span class="badge badge-hidden">중지</span>{% endif %}</td>
+        <td class="actions">
+          <button class="btn btn-sm" data-dialog="group-dialog"
+                  data-id="{{ gr['id'] }}" data-name="{{ gr['name'] }}" data-channel_id="{{ gr['channel_id'] }}"
+                  data-description="{{ gr['description'] }}" data-active="{{ gr['active'] }}">수정</button>
+          <form method="post" action="{{ url_for('org.group_delete', gid=gr['id']) }}"
+                onsubmit="return confirm('그룹 [{{ gr['name'] }}]을(를) 삭제할까요?')">
+            <button class="btn btn-sm btn-danger">삭제</button>
+          </form>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<section class="panel">
+  <div class="panel-head">
+    <h2>사용자</h2>
+    <button class="btn btn-primary" data-dialog="user-dialog">+ 사용자 추가</button>
+  </div>
+  <table class="table">
+    <thead><tr><th>아이디</th><th>이름</th><th>권한</th><th>채널 / 그룹</th><th>상태</th><th>생성일</th><th></th></tr></thead>
+    <tbody>
+    {% for u in users %}
+      <tr>
+        <td class="mono">{{ u['username'] }}</td>
+        <td>{{ u['name'] }}</td>
+        <td>{{ {'admin':'관리자','manager':'운영자','viewer':'조회자'}.get(u['role'], u['role']) }}</td>
+        <td class="muted">{{ u['channel_name'] or '-' }} / {{ u['group_name'] or '-' }}</td>
+        <td>{% if u['active'] %}<span class="badge badge-published">사용</span>{% else %}<span class="badge badge-hidden">중지</span>{% endif %}</td>
+        <td class="muted">{{ u['created_at'][:10] }}</td>
+        <td class="actions">
+          <button class="btn btn-sm" data-dialog="user-dialog"
+                  data-id="{{ u['id'] }}" data-username="{{ u['username'] }}" data-name="{{ u['name'] }}"
+                  data-role="{{ u['role'] }}" data-group_id="{{ u['group_id'] or '' }}" data-active="{{ u['active'] }}">수정</button>
+          <form method="post" action="{{ url_for('org.user_delete', uid=u['id']) }}"
+                onsubmit="return confirm('사용자 [{{ u['name'] }}]을(를) 삭제할까요?')">
+            <button class="btn btn-sm btn-danger">삭제</button>
+          </form>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<dialog id="channel-dialog">
+  <form method="post" action="{{ url_for('org.channel_save') }}">
+    <h3 data-title-new="채널 추가" data-title-edit="채널 수정">채널</h3>
+    <input type="hidden" name="id">
+    <label>채널 코드 <input name="code" required placeholder="예: DIRECT"></label>
+    <label>채널 이름 <input name="name" required placeholder="예: 자사몰"></label>
+    <label>설명 <input name="description"></label>
+    <label class="check"><input type="checkbox" name="active" value="1" checked> 사용</label>
+    <div class="dialog-actions">
+      <button type="button" class="btn" onclick="this.closest('dialog').close()">취소</button>
+      <button class="btn btn-primary">저장</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="group-dialog">
+  <form method="post" action="{{ url_for('org.group_save') }}">
+    <h3 data-title-new="그룹 추가" data-title-edit="그룹 수정">그룹</h3>
+    <input type="hidden" name="id">
+    <label>그룹 이름 <input name="name" required></label>
+    <label>소속 채널
+      <select name="channel_id" required>
+        {% for ch in channels %}<option value="{{ ch['id'] }}">{{ ch['name'] }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>설명 <input name="description"></label>
+    <label class="check"><input type="checkbox" name="active" value="1" checked> 사용</label>
+    <div class="dialog-actions">
+      <button type="button" class="btn" onclick="this.closest('dialog').close()">취소</button>
+      <button class="btn btn-primary">저장</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="user-dialog">
+  <form method="post" action="{{ url_for('org.user_save') }}">
+    <h3 data-title-new="사용자 추가" data-title-edit="사용자 수정">사용자</h3>
+    <input type="hidden" name="id">
+    <label>아이디 <input name="username" required autocomplete="off"></label>
+    <label>이름 <input name="name" required></label>
+    <label>비밀번호 <input type="password" name="password" autocomplete="new-password"
+           placeholder="수정 시 비워두면 기존 유지"></label>
+    <label>권한
+      <select name="role">
+        <option value="admin">관리자</option>
+        <option value="manager" selected>운영자</option>
+        <option value="viewer">조회자</option>
+      </select>
+    </label>
+    <label>소속 그룹
+      <select name="group_id">
+        <option value="">(없음)</option>
+        {% for gr in groups %}<option value="{{ gr['id'] }}">{{ gr['channel_name'] }} · {{ gr['name'] }}</option>{% endfor %}
+      </select>
+    </label>
+    <label class="check"><input type="checkbox" name="active" value="1" checked> 사용</label>
+    <div class="dialog-actions">
+      <button type="button" class="btn" onclick="this.closest('dialog').close()">취소</button>
+      <button class="btn btn-primary">저장</button>
+    </div>
+  </form>
+</dialog>
+{% endblock %}
