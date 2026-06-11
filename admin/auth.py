@@ -29,6 +29,26 @@ def load_logged_in_user():
         ).fetchone()
 
 
+@bp.before_app_request
+def enforce_role():
+    """권한 정책: org(채널·그룹·사용자)는 관리자 전용, 조회자는 읽기 전용."""
+    if g.get("user") is None:
+        return None
+    ep = request.endpoint or ""
+    if ep.startswith(("auth.", "static", "api.")):
+        return None
+    if ep.startswith("org.") and g.user["role"] != "admin":
+        flash("채널·그룹·사용자 관리는 관리자만 접근할 수 있습니다.", "error")
+        return redirect(url_for("main.dashboard"))
+    if g.user["role"] == "viewer" and request.method == "POST":
+        flash("조회자 권한으로는 변경할 수 없습니다. 관리자에게 권한을 요청하세요.", "error")
+        ref = request.referrer or ""
+        if ref.startswith(request.host_url):
+            return redirect(ref)
+        return redirect(url_for("main.dashboard"))
+    return None
+
+
 def login_required(view):
     @functools.wraps(view)
     def wrapped(**kwargs):

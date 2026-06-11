@@ -5,6 +5,7 @@
 <div class="page-head">
   <h1><span class="eyebrow">Content Workspace</span>콘텐츠 관리 <span class="muted">폴더 · 리스트 · 마스터 정보를 한 화면에서</span></h1>
   <div class="actions">
+    <a class="btn" href="{{ url_for('contents.export', **list_args) }}" title="현재 필터 기준 CSV 다운로드">내보내기</a>
     <a class="btn" href="{{ url_for('contents.bulk') }}">일괄등록</a>
     <a class="btn btn-primary" href="{{ url_for('contents.index', new=1, **list_args) }}">+ 콘텐츠 등록</a>
   </div>

@@ -34,16 +34,13 @@ BULK_COLUMNS = [
 
 # ---------- 리스트 ----------
 
-@bp.route("/")
-@login_required
-def index():
-    db = get_db()
-    category_id = request.args.get("category_id", type=int)
-    status = request.args.get("status", "")
-    q = request.args.get("q", "").strip()
-
+def filtered_items(db, category_id: int | None, status: str, q: str) -> list[dict]:
+    """필터 적용된 콘텐츠 + 마스터 + 태그. 리스트 화면과 CSV 내보내기가 공유."""
     sql = (
-        "SELECT ct.*, (cm.content_id IS NOT NULL) AS has_master"
+        "SELECT ct.*, (cm.content_id IS NOT NULL) AS has_master,"
+        " cm.brand, cm.model_no, cm.price, cm.cost, cm.unit,"
+        " cm.width_mm, cm.depth_mm, cm.height_mm, cm.material,"
+        " cm.color AS master_color, cm.manufacturer, cm.origin"
         " FROM contents ct LEFT JOIN content_master cm ON cm.content_id = ct.id"
         " WHERE 1=1"
     )
@@ -63,12 +60,15 @@ def index():
 
     tag_map: dict[int, list] = {}
     for r in db.execute(
-        "SELECT ct.content_id, t.name, t.color FROM content_tags ct"
-        " JOIN tags t ON t.id = ct.tag_id ORDER BY t.folder_id, t.sort_order"
+        "SELECT ct.content_id, t.name, t.color, f.name AS folder"
+        " FROM content_tags ct"
+        " JOIN tags t ON t.id = ct.tag_id"
+        " JOIN tag_folders f ON f.id = t.folder_id"
+        " ORDER BY f.sort_order, t.sort_order"
     ):
         tag_map.setdefault(r["content_id"], []).append(r)
 
-    items = [
+    return [
         {
             **dict(r),
             "path": category_path(db, r["category_id"]),
@@ -76,6 +76,16 @@ def index():
         }
         for r in rows
     ]
+
+
+@bp.route("/")
+@login_required
+def index():
+    db = get_db()
+    category_id = request.args.get("category_id", type=int)
+    status = request.args.get("status", "")
+    q = request.args.get("q", "").strip()
+    items = filtered_items(db, category_id, status, q)
     flat = flatten_tree(build_tree(db))
     channels = db.execute(
         "SELECT * FROM channels WHERE active=1 ORDER BY sort_order, id"
@@ -273,6 +283,42 @@ def delete(cid: int):
     db.commit()
     flash("콘텐츠를 삭제했습니다.", "success")
     return back()
+
+
+# ---------- 내보내기 (CSV) ----------
+
+@bp.route("/export")
+@login_required
+def export():
+    """현재 필터 기준 콘텐츠를 일괄등록 템플릿과 같은 형식의 CSV로 다운로드.
+
+    내려받아 수정한 뒤 그대로 일괄등록에 올리면 왕복(roundtrip) 수정이 된다.
+    """
+    db = get_db()
+    items = filtered_items(
+        db,
+        request.args.get("category_id", type=int),
+        request.args.get("status", ""),
+        request.args.get("q", "").strip(),
+    )
+    buf = io.StringIO()
+    writer = csv.writer(buf)
+    writer.writerow(BULK_COLUMNS)
+    for it in items:
+        tags = ", ".join(f"{t['folder']}>{t['name']}" for t in it["tags"])
+        writer.writerow([
+            it["code"], it["name"], it["path"], STATUS_LABELS[it["status"]],
+            it["brand"] or "", it["model_no"] or "",
+            it["price"] or 0, it["cost"] or 0, it["unit"] or "EA",
+            it["width_mm"] or 0, it["depth_mm"] or 0, it["height_mm"] or 0,
+            it["material"] or "", it["master_color"] or "",
+            it["manufacturer"] or "", it["origin"] or "", tags,
+        ])
+    return Response(
+        "﻿" + buf.getvalue(),
+        mimetype="text/csv; charset=utf-8",
+        headers={"Content-Disposition": "attachment; filename=contents_export.csv"},
+    )
 
 
 # ---------- 일괄등록 (CSV) ----------

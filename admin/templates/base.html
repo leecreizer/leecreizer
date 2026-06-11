@@ -15,7 +15,9 @@
     <div class="brand">설계 어드민</div>
     <nav>
       <a href="{{ url_for('main.dashboard') }}" class="{{ 'on' if request.blueprint == 'main' }}">대시보드</a>
+      {% if g.user['role'] == 'admin' %}
       <a href="{{ url_for('org.index') }}" class="{{ 'on' if request.blueprint == 'org' }}">채널 · 그룹 · 사용자</a>
+      {% endif %}
       <a href="{{ url_for('categories.index') }}" class="{{ 'on' if request.blueprint == 'categories' }}">카테고리 관리</a>
       <a href="{{ url_for('contents.index') }}" class="{{ 'on' if request.blueprint == 'contents' and request.endpoint != 'contents.bulk' }}">콘텐츠 관리</a>
       <a href="{{ url_for('contents.bulk') }}" class="{{ 'on' if request.endpoint == 'contents.bulk' }}">마스터 일괄등록</a>

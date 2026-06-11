@@ -18,7 +18,7 @@ def create_app(db_path: str | os.PathLike | None = None) -> Flask:
     init_db(app.config["DB_PATH"])
     app.teardown_appcontext(close_db)
 
-    from . import auth, categories, contents, main, org, tags
+    from . import api, auth, categories, contents, main, org, tags
 
     app.register_blueprint(auth.bp)
     app.register_blueprint(main.bp)
@@ -26,4 +26,5 @@ def create_app(db_path: str | os.PathLike | None = None) -> Flask:
     app.register_blueprint(categories.bp)
     app.register_blueprint(contents.bp)
     app.register_blueprint(tags.bp)
+    app.register_blueprint(api.bp)
     return app

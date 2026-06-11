@@ -170,6 +170,91 @@ def test_bulk_upload(client):
     assert "신규대분류" in listing  # 카테고리 경로 자동 생성 확인
 
 
+def test_api_categories(client):
+    """설계 페이지 연동: 채널별 노출 카테고리 트리 (인증 불필요)."""
+    res = client.get("/api/channels/DIRECT/categories")
+    assert res.status_code == 200
+    data = res.get_json()
+    assert data["channel"]["code"] == "DIRECT"
+    names = [c["name"] for c in data["categories"]]
+    assert "가구" in names and "주방" in names
+
+    assert client.get("/api/channels/NOPE/categories").status_code == 404
+
+
+def test_api_categories_respects_exposure(client):
+    """채널 노출을 끄면 해당 카테고리(하위 포함)가 API에서 빠진다."""
+    login(client)
+    # '가구'(id=1)를 DIRECT(채널 1)에서 미노출로 변경 (채널 2,3만 체크)
+    client.post(
+        "/categories/save",
+        data={"id": "1", "name": "가구", "parent_id": "", "active": "1",
+              "channel_ids": ["2", "3"]},
+    )
+    data = client.get("/api/channels/DIRECT/categories").get_json()
+    names = [c["name"] for c in data["categories"]]
+    assert "가구" not in names and "주방" in names
+    # 다른 채널에서는 여전히 노출
+    data2 = client.get("/api/channels/PARTNER/categories").get_json()
+    assert "가구" in [c["name"] for c in data2["categories"]]
+
+
+def test_api_contents_published_only(client):
+    """노출(published) 콘텐츠만, 마스터·태그 포함해 내려간다."""
+    res = client.get("/api/channels/DIRECT/contents")
+    assert res.status_code == 200
+    data = res.get_json()
+    codes = [i["code"] for i in data["items"]]
+    assert "BED-001" in codes and "SOFA-001" in codes
+    assert "SINK-001" not in codes  # draft 제외
+    bed = next(i for i in data["items"] if i["code"] == "BED-001")
+    assert bed["master"]["brand"] == "리브홈"
+    assert any(t["name"] == "모던" for t in bed["tags"])
+
+    # 태그 필터 (AND)
+    data = client.get("/api/channels/DIRECT/contents?tag=모던").get_json()
+    assert [i["code"] for i in data["items"]] == ["BED-001"]
+
+
+def test_export_csv_roundtrip_format(client):
+    """내보내기 CSV가 일괄등록 템플릿과 같은 컬럼/값 형식이다."""
+    login(client)
+    res = client.get("/contents/export")
+    assert res.status_code == 200
+    assert "text/csv" in res.headers["Content-Type"]
+    body = res.data.decode("utf-8-sig")
+    assert body.splitlines()[0].startswith("콘텐츠코드,콘텐츠명,카테고리경로")
+    assert "BED-001" in body
+    assert "가구 > 침실 > 침대" in body
+    assert "스타일>모던" in body
+
+
+def test_rbac_viewer_readonly_and_org_admin_only(client):
+    """조회자는 변경 불가, 관리자 외에는 조직 관리 접근 불가."""
+    login(client)
+    client.post(
+        "/org/users/save",
+        data={"username": "viewer1", "name": "조회자", "password": "pw1234",
+              "role": "viewer", "group_id": "1", "active": "1"},
+    )
+    client.get("/logout")
+    login(client, "viewer1", "pw1234")
+
+    # 읽기는 가능
+    assert client.get("/contents/").status_code == 200
+    # 쓰기는 차단
+    res = client.post(
+        "/tags/folders/save", data={"name": "차단테스트", "active": "1"},
+        follow_redirects=True,
+    )
+    assert "변경할 수 없습니다".encode() in res.data
+    body = client.get("/tags/").data.decode()
+    assert "차단테스트" not in body
+    # 조직 관리는 관리자 전용
+    res = client.get("/org/", follow_redirects=True)
+    assert "관리자만 접근할 수 있습니다".encode() in res.data
+
+
 def test_tags_crud(client):
     login(client)
     res = client.post(
