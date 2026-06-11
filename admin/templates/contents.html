@@ -2,9 +2,9 @@
 {% block title %}콘텐츠 관리{% endblock %}
 {% block body %}
 <div class="page-head">
-  <h1>콘텐츠 관리 <span class="muted small">폴더(카테고리) · 콘텐츠 통합 관리</span></h1>
+  <h1><span class="eyebrow">Content Library</span>콘텐츠 관리 <span class="muted">폴더(카테고리) · 콘텐츠 통합 관리</span></h1>
   <div class="actions">
-    <a class="btn" href="{{ url_for('contents.bulk') }}">📤 일괄등록</a>
+    <a class="btn" href="{{ url_for('contents.bulk') }}">일괄등록</a>
     <a class="btn btn-primary" href="{{ url_for('contents.form', category_id=f_category or none) }}">+ 콘텐츠 등록</a>
   </div>
 </div>
@@ -12,7 +12,7 @@
 <div class="split">
   <aside class="cat-nav panel">
     <div class="cat-nav-head">
-      <strong>📁 폴더</strong>
+      <strong>Folders</strong>
       <button class="btn btn-xs" data-dialog="category-dialog" title="최상위 폴더 추가">+ 폴더</button>
     </div>
     <a class="cat-item cat-all {{ 'active' if not f_category }}"
@@ -67,7 +67,7 @@
             <td class="mono">{{ c['code'] }}</td>
             <td>
               <a href="{{ url_for('contents.form', cid=c['id']) }}"><strong>{{ c['name'] }}</strong></a>
-              {% if c['thumbnail_url'] %}<span class="muted small">🖼</span>{% endif %}
+              {% if c['thumbnail_url'] %}<span class="chip">IMG</span>{% endif %}
             </td>
             <td class="muted">{{ c['path'] or '(미지정)' }}</td>
             <td>

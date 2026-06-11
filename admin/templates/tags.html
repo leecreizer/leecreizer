@@ -2,14 +2,14 @@
 {% block title %}태그 마스터{% endblock %}
 {% block body %}
 <div class="page-head">
-  <h1>태그 마스터 <span class="muted small">콘텐츠 폴더별 설계리스트 노출용</span></h1>
+  <h1><span class="eyebrow">Tag Master</span>태그 마스터 <span class="muted">콘텐츠 폴더별 설계리스트 노출용</span></h1>
   <button class="btn btn-primary" data-dialog="folder-dialog">+ 태그 폴더 추가</button>
 </div>
 
 {% for folder in folders %}
 <section class="panel {{ 'inactive' if not folder['active'] }}">
   <div class="panel-head">
-    <h2>📁 {{ folder['name'] }} <span class="muted small">{{ folder['description'] }}</span>
+    <h2>{{ folder['name'] }} <span class="muted small">{{ folder['description'] }}</span>
       {% if not folder['active'] %}<span class="badge badge-hidden">중지</span>{% endif %}
     </h2>
     <div class="actions">

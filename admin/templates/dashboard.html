@@ -1,7 +1,9 @@
 {% extends "base.html" %}
 {% block title %}대시보드{% endblock %}
 {% block body %}
-<h1>대시보드</h1>
+<div class="page-head">
+  <h1><span class="eyebrow">Overview</span>대시보드</h1>
+</div>
 <div class="stat-grid">
   <a class="stat" href="{{ url_for('org.index') }}"><span class="num">{{ stats.channels }}</span>유통 채널</a>
   <a class="stat" href="{{ url_for('org.index') }}"><span class="num">{{ stats.groups }}</span>사용자 그룹</a>
