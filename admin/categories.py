@@ -11,6 +11,14 @@ from .db import get_db
 bp = Blueprint("categories", __name__, url_prefix="/categories")
 
 
+def back():
+    """콘텐츠 통합 화면 등 호출한 화면으로 복귀 (next 폼 필드, 내부 경로만 허용)."""
+    nxt = request.form.get("next", "")
+    if nxt.startswith("/") and not nxt.startswith("//"):
+        return redirect(nxt)
+    return redirect(url_for("categories.index"))
+
+
 def build_tree(db: sqlite3.Connection) -> list[dict]:
     rows = db.execute(
         "SELECT c.*,"
@@ -92,12 +100,12 @@ def save():
     channel_ids = request.form.getlist("channel_ids")
     if not name:
         flash("카테고리 이름은 필수입니다.", "error")
-        return redirect(url_for("categories.index"))
+        return back()
 
     if cid:
         if parent_id and int(parent_id) in descendant_ids(db, int(cid)):
             flash("자기 자신 또는 하위 카테고리로는 이동할 수 없습니다.", "error")
-            return redirect(url_for("categories.index"))
+            return back()
         db.execute(
             "UPDATE categories SET name=?, parent_id=?, active=? WHERE id=?",
             (name, parent_id, active, cid),
@@ -118,7 +126,7 @@ def save():
             (cid, ch),
         )
     db.commit()
-    return redirect(url_for("categories.index"))
+    return back()
 
 
 @bp.route("/<int:cid>/delete", methods=["POST"])
@@ -132,12 +140,12 @@ def delete(cid: int):
     ).fetchone()[0]
     if cnt:
         flash(f"이 카테고리(하위 포함)에 콘텐츠 {cnt}건이 있어 삭제할 수 없습니다.", "error")
-        return redirect(url_for("categories.index"))
+        return back()
     db.execute(f"DELETE FROM category_channels WHERE category_id IN ({placeholders})", ids)
     db.execute(f"DELETE FROM categories WHERE id IN ({placeholders})", ids)
     db.commit()
     flash("카테고리를 삭제했습니다(하위 포함).", "success")
-    return redirect(url_for("categories.index"))
+    return back()
 
 
 @bp.route("/<int:cid>/move/<direction>", methods=["POST"])
@@ -147,7 +155,7 @@ def move(cid: int, direction: str):
     db = get_db()
     me = db.execute("SELECT * FROM categories WHERE id=?", (cid,)).fetchone()
     if me is None:
-        return redirect(url_for("categories.index"))
+        return back()
     op, order = ("<", "DESC") if direction == "up" else (">", "ASC")
     parent_cond = "parent_id IS NULL" if me["parent_id"] is None else "parent_id = ?"
     params: list = [me["sort_order"]]
@@ -162,4 +170,4 @@ def move(cid: int, direction: str):
         db.execute("UPDATE categories SET sort_order=? WHERE id=?", (neighbor["sort_order"], cid))
         db.execute("UPDATE categories SET sort_order=? WHERE id=?", (me["sort_order"], neighbor["id"]))
         db.commit()
-    return redirect(url_for("categories.index"))
+    return back()

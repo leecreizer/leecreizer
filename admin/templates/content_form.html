@@ -22,7 +22,7 @@
         <select name="category_id">
           <option value="">(미지정)</option>
           {% for c in flat %}
-            <option value="{{ c['id'] }}" {{ 'selected' if content and content['category_id'] == c['id'] }}>{{ ('&nbsp;' * (c['depth'] * 3)) | safe }}{{ '└ ' if c['depth'] }}{{ c['name'] }}</option>
+            <option value="{{ c['id'] }}" {{ 'selected' if preselect_category == c['id'] }}>{{ ('&nbsp;' * (c['depth'] * 3)) | safe }}{{ '└ ' if c['depth'] }}{{ c['name'] }}</option>
           {% endfor %}
         </select>
       </label>

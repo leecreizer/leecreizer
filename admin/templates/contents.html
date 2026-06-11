@@ -2,62 +2,124 @@
 {% block title %}콘텐츠 관리{% endblock %}
 {% block body %}
 <div class="page-head">
-  <h1>콘텐츠 관리 <span class="muted small">카테고리별 등록 · 수정</span></h1>
-  <div>
+  <h1>콘텐츠 관리 <span class="muted small">폴더(카테고리) · 콘텐츠 통합 관리</span></h1>
+  <div class="actions">
     <a class="btn" href="{{ url_for('contents.bulk') }}">📤 일괄등록</a>
-    <a class="btn btn-primary" href="{{ url_for('contents.form') }}">+ 콘텐츠 등록</a>
+    <a class="btn btn-primary" href="{{ url_for('contents.form', category_id=f_category or none) }}">+ 콘텐츠 등록</a>
   </div>
 </div>
 
-<form class="filter-bar" method="get">
-  <select name="category_id">
-    <option value="">전체 카테고리</option>
+<div class="split">
+  <aside class="cat-nav panel">
+    <div class="cat-nav-head">
+      <strong>📁 폴더</strong>
+      <button class="btn btn-xs" data-dialog="category-dialog" title="최상위 폴더 추가">+ 폴더</button>
+    </div>
+    <a class="cat-item cat-all {{ 'active' if not f_category }}"
+       href="{{ url_for('contents.index', status=f_status or none, q=f_q or none) }}">전체 콘텐츠</a>
     {% for c in flat %}
-      <option value="{{ c['id'] }}" {{ 'selected' if f_category == c['id'] }}>{{ ('&nbsp;' * (c['depth'] * 3)) | safe }}{{ '└ ' if c['depth'] }}{{ c['name'] }}</option>
-    {% endfor %}
-  </select>
-  <select name="status">
-    <option value="">전체 상태</option>
-    {% for key, label in status_labels.items() %}
-      <option value="{{ key }}" {{ 'selected' if f_status == key }}>{{ label }}</option>
-    {% endfor %}
-  </select>
-  <input name="q" value="{{ f_q }}" placeholder="콘텐츠명 / 코드 검색">
-  <button class="btn btn-primary">검색</button>
-  <a class="btn" href="{{ url_for('contents.index') }}">초기화</a>
-</form>
-
-<table class="table">
-  <thead>
-    <tr><th>코드</th><th>콘텐츠명</th><th>카테고리</th><th>태그</th><th>마스터</th><th>상태</th><th>수정일시</th><th></th></tr>
-  </thead>
-  <tbody>
-  {% for c in items %}
-    <tr>
-      <td class="mono">{{ c['code'] }}</td>
-      <td>
-        {{ c['name'] }}
-        {% if c['thumbnail_url'] %}<span class="muted small">🖼</span>{% endif %}
-      </td>
-      <td class="muted">{{ c['path'] or '(미지정)' }}</td>
-      <td>
-        {% for t in c['tags'] %}<span class="chip" style="background:{{ t['color'] }};color:#fff">{{ t['name'] }}</span>{% endfor %}
-      </td>
-      <td>{% if c['has_master'] %}<span class="badge badge-published">등록</span>{% else %}<span class="badge badge-draft">미등록</span>{% endif %}</td>
-      <td><span class="badge badge-{{ c['status'] }}">{{ status_labels[c['status']] }}</span></td>
-      <td class="muted">{{ c['updated_at'] }}</td>
-      <td class="actions">
-        <a class="btn btn-sm" href="{{ url_for('contents.form', cid=c['id']) }}">수정</a>
-        <form method="post" action="{{ url_for('contents.delete', cid=c['id']) }}"
-              onsubmit="return confirm('[{{ c['name'] }}] 콘텐츠를 삭제할까요?')">
-          <button class="btn btn-sm btn-danger">삭제</button>
+    <div class="cat-item {{ 'active' if f_category == c['id'] }} {{ 'inactive' if not c['active'] }}"
+         style="padding-left: {{ 12 + c['depth'] * 16 }}px">
+      <a class="cat-link" href="{{ url_for('contents.index', category_id=c['id'], status=f_status or none, q=f_q or none) }}">
+        {{ '└ ' if c['depth'] }}{{ c['name'] }}
+      </a>
+      <span class="cat-count">{{ c['content_count'] }}</span>
+      <span class="cat-actions">
+        <button class="btn btn-xs" data-dialog="category-dialog" data-parent_id="{{ c['id'] }}" title="하위 폴더 추가">＋</button>
+        <button class="btn btn-xs" data-dialog="category-dialog" title="폴더 수정"
+                data-id="{{ c['id'] }}" data-name="{{ c['name'] }}"
+                data-parent_id="{{ c['parent_id'] or '' }}" data-active="{{ c['active'] }}"
+                data-channel_ids="{{ c['channel_ids']|join(',') }}">✎</button>
+        <form method="post" action="{{ url_for('categories.delete', cid=c['id']) }}"
+              onsubmit="return confirm('[{{ c['name'] }}] 폴더를 하위 포함 삭제할까요?')">
+          <input type="hidden" name="next" value="{{ url_for('contents.index') }}">
+          <button class="btn btn-xs btn-danger" title="삭제">×</button>
         </form>
-      </td>
-    </tr>
-  {% else %}
-    <tr><td colspan="8" class="muted">조건에 맞는 콘텐츠가 없습니다.</td></tr>
-  {% endfor %}
-  </tbody>
-</table>
-<p class="muted small">총 {{ items|length }}건</p>
+      </span>
+    </div>
+    {% endfor %}
+    <p class="muted small cat-nav-foot">채널별 노출 설정은 폴더 ✎ 또는
+      <a href="{{ url_for('categories.index') }}">카테고리 관리</a>에서.</p>
+  </aside>
+
+  <div class="split-main">
+    <form class="filter-bar" method="get">
+      {% if f_category %}<input type="hidden" name="category_id" value="{{ f_category }}">{% endif %}
+      <select name="status">
+        <option value="">전체 상태</option>
+        {% for key, label in status_labels.items() %}
+          <option value="{{ key }}" {{ 'selected' if f_status == key }}>{{ label }}</option>
+        {% endfor %}
+      </select>
+      <input name="q" value="{{ f_q }}" placeholder="콘텐츠명 / 코드 검색">
+      <button class="btn btn-primary">검색</button>
+      <a class="btn" href="{{ url_for('contents.index', category_id=f_category or none) }}">초기화</a>
+    </form>
+
+    <div class="panel">
+      <table class="table">
+        <thead>
+          <tr><th>코드</th><th>콘텐츠명</th><th>카테고리</th><th>태그</th><th>마스터</th><th>상태</th><th>수정일시</th><th></th></tr>
+        </thead>
+        <tbody>
+        {% for c in items %}
+          <tr>
+            <td class="mono">{{ c['code'] }}</td>
+            <td>
+              <a href="{{ url_for('contents.form', cid=c['id']) }}"><strong>{{ c['name'] }}</strong></a>
+              {% if c['thumbnail_url'] %}<span class="muted small">🖼</span>{% endif %}
+            </td>
+            <td class="muted">{{ c['path'] or '(미지정)' }}</td>
+            <td>
+              {% for t in c['tags'] %}<span class="chip" style="background:{{ t['color'] }};color:#fff">{{ t['name'] }}</span>{% endfor %}
+            </td>
+            <td>{% if c['has_master'] %}<span class="badge badge-published">등록</span>{% else %}<span class="badge badge-draft">미등록</span>{% endif %}</td>
+            <td><span class="badge badge-{{ c['status'] }}">{{ status_labels[c['status']] }}</span></td>
+            <td class="muted small">{{ c['updated_at'] }}</td>
+            <td class="actions">
+              <a class="btn btn-sm" href="{{ url_for('contents.form', cid=c['id']) }}">수정</a>
+              <form method="post" action="{{ url_for('contents.delete', cid=c['id']) }}"
+                    onsubmit="return confirm('[{{ c['name'] }}] 콘텐츠를 삭제할까요?')">
+                <button class="btn btn-sm btn-danger">삭제</button>
+              </form>
+            </td>
+          </tr>
+        {% else %}
+          <tr><td colspan="8" class="muted">이 폴더에 콘텐츠가 없습니다.
+            <a href="{{ url_for('contents.form', category_id=f_category or none) }}">+ 바로 등록하기</a></td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      <p class="muted small">총 {{ items|length }}건</p>
+    </div>
+  </div>
+</div>
+
+<dialog id="category-dialog">
+  <form method="post" action="{{ url_for('categories.save') }}">
+    <h3 data-title-new="폴더 추가" data-title-edit="폴더 수정">폴더</h3>
+    <input type="hidden" name="id">
+    <input type="hidden" name="next" value="{{ request.full_path }}">
+    <label>폴더 이름 <input name="name" required></label>
+    <label>상위 폴더
+      <select name="parent_id">
+        <option value="">(최상위)</option>
+        {% for c in flat %}
+          <option value="{{ c['id'] }}">{{ ('&nbsp;' * (c['depth'] * 3)) | safe }}{{ '└ ' if c['depth'] }}{{ c['name'] }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <fieldset>
+      <legend>설계 페이지 노출 채널</legend>
+      {% for ch in channels %}
+        <label class="check"><input type="checkbox" name="channel_ids" value="{{ ch['id'] }}" checked> {{ ch['name'] }}</label>
+      {% endfor %}
+    </fieldset>
+    <label class="check"><input type="checkbox" name="active" value="1" checked> 사용</label>
+    <div class="dialog-actions">
+      <button type="button" class="btn" onclick="this.closest('dialog').close()">취소</button>
+      <button class="btn btn-primary">저장</button>
+    </div>
+  </form>
+</dialog>
 {% endblock %}

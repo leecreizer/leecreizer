@@ -75,6 +75,20 @@ def test_category_crud(client):
     assert "조명".encode() in client.get("/categories/").data
 
 
+def test_category_save_returns_to_contents_page(client):
+    """통합 화면(콘텐츠 관리)에서 폴더 저장 시 해당 화면으로 복귀한다."""
+    login(client)
+    res = client.post(
+        "/categories/save",
+        data={"name": "통합폴더", "parent_id": "", "active": "1",
+              "channel_ids": ["1"], "next": "/contents/?category_id=1"},
+    )
+    assert res.status_code == 302
+    assert res.headers["Location"] == "/contents/?category_id=1"
+    body = client.get("/contents/").data.decode()
+    assert "통합폴더" in body  # 좌측 폴더 트리에 노출
+
+
 def test_content_form_and_master(client):
     login(client)
     res = client.post(

@@ -69,9 +69,12 @@ def index():
         for r in rows
     ]
     flat = flatten_tree(build_tree(db))
+    channels = db.execute(
+        "SELECT * FROM channels WHERE active=1 ORDER BY sort_order, id"
+    ).fetchall()
     return render_template(
         "contents.html",
-        items=items, flat=flat, status_labels=STATUS_LABELS,
+        items=items, flat=flat, channels=channels, status_labels=STATUS_LABELS,
         f_category=category_id, f_status=status, f_q=q,
     )
 
@@ -169,6 +172,11 @@ def form(cid: int | None = None):
                 flash(f"콘텐츠 '{name}'을(를) 저장했습니다.", "success")
                 return redirect(url_for("contents.index"))
 
+    # 통합 화면에서 폴더를 선택한 채 "+ 콘텐츠"를 누르면 해당 카테고리를 미리 선택
+    preselect_category = request.args.get("category_id", type=int)
+    if content is not None:
+        preselect_category = content["category_id"]
+
     flat = flatten_tree(build_tree(db))
     folders = db.execute(
         "SELECT * FROM tag_folders WHERE active=1 ORDER BY sort_order, id"
@@ -181,6 +189,7 @@ def form(cid: int | None = None):
         content=content, master=master, flat=flat,
         folders=folders, tags_by_folder=tags_by_folder,
         selected_tags=selected_tags, status_labels=STATUS_LABELS,
+        preselect_category=preselect_category,
     )
 
 
